@@ -10,19 +10,16 @@
 #define MAX_AMPS 30000
 #define FRAMES_PER_SECOND 24
 
-#define NUM_LEDS_INFERIOR 120
-#define NUM_LEDS_LECTURA 288
+#define NUM_LEDS_AMBIENT 193
+#define NUM_LEDS_READING 288
 #define NUM_LEDS_TOP 107
-#define NUM_LEDS_TREN 73
 
-#define DATA_PIN_INFERIOR 1
-#define CLOCK_PIN_INFERIOR 0
-#define DATA_PIN_LECTURA 7
-#define CLOCK_PIN_LECTURA 6
-#define DATA_PIN_TOP 11
-#define CLOCK_PIN_TOP 10
-#define DATA_PIN_TREN 5
-#define CLOCK_PIN_TREN 4
+#define CLOCK_PIN_AMBIENT 13 // SCK
+#define DATA_PIN_AMBIENT 11 // MOSI
+#define CLOCK_PIN_TOP 27 // SCK1
+#define DATA_PIN_TOP 26 // MOSI1
+#define CLOCK_PIN_READING 49 // SCK2
+#define DATA_PIN_READING 50 // MOSI2
 
 #define POTEN_1 A1
 #define POTEN_2 A0
@@ -33,10 +30,9 @@
 #define SENSOR_R A14
 
 
-CRGB ledsInferior[NUM_LEDS_INFERIOR];
-CRGB ledsLectura[NUM_LEDS_LECTURA];
-CRGB ledsTop[NUM_LEDS_TOP];
-CRGB ledsTren[NUM_LEDS_TREN];
+CRGB ambientLeds[NUM_LEDS_AMBIENT];
+CRGB readingLeds[NUM_LEDS_READING];
+CRGB topLeds[NUM_LEDS_TOP];
 
 // Define the pin numbers for your switches
 const uint8_t switchPins[] = { 25, 31, 27, 28, 29, 30 };
@@ -84,32 +80,24 @@ void toggleCallbackFunction(void *s) {
     case 4:
       isTopOn = !isTopOn;
       if (isTopOn) {
-        fill_solid(ledsTop, NUM_LEDS_TOP, CRGB::Goldenrod);
+        fill_solid(topLeds, NUM_LEDS_TOP, CRGB::Goldenrod);
       } else {
-        fill_solid(ledsTop, NUM_LEDS_TOP, CRGB::Black);
-        if ((*switchIndex) == 1 && isTrenOn) {
-          isTrenOn = false;
-          fill_solid(ledsTren, NUM_LEDS_TREN, CRGB::Black);
-        }
+        fill_solid(topLeds, NUM_LEDS_TOP, CRGB::Black);
       }
       FastLED.show();
       break;
     case 5:
       isTrenOn = !isTrenOn;
-      if (!isTrenOn) {
-        fill_solid(ledsTren, NUM_LEDS_TREN, CRGB::Black);
-        FastLED.show();
-      }
       break;
     case 2:
       isLeftOn = !isLeftOn;
       if (isLeftOn) {
-        for (uint16_t i = NUM_LEDS_LECTURA - 1; i > NUM_LEDS_LECTURA / 2; --i) {
-          ledsLectura[i] = CRGB::Goldenrod;
+        for (uint16_t i = NUM_LEDS_READING - 1; i > NUM_LEDS_READING / 2; --i) {
+          readingLeds[i] = CRGB::Goldenrod;
         }
       } else {
-        for (uint16_t i = NUM_LEDS_LECTURA / 2; i < NUM_LEDS_LECTURA - 1; ++i) {
-          ledsLectura[i] = CRGB::Black;
+        for (uint16_t i = NUM_LEDS_READING / 2; i < NUM_LEDS_READING - 1; ++i) {
+          readingLeds[i] = CRGB::Black;
         }
       }
       FastLED.show();
@@ -117,14 +105,14 @@ void toggleCallbackFunction(void *s) {
     case 3:
       isRightOn = !isRightOn;
       if (isRightOn) {
-        for (uint8_t i = 0; i < NUM_LEDS_LECTURA / 2; ++i) {
-          ledsLectura[i] = CRGB::Goldenrod;
+        for (uint8_t i = 0; i < NUM_LEDS_READING / 2; ++i) {
+          readingLeds[i] = CRGB::Goldenrod;
         }
       } else {
-        for (uint8_t i = NUM_LEDS_LECTURA / 2; i > 0; --i) {
-          ledsLectura[i] = CRGB::Black;
+        for (uint8_t i = NUM_LEDS_READING / 2; i > 0; --i) {
+          readingLeds[i] = CRGB::Black;
         }
-        ledsLectura[0] = CRGB::Black;
+        readingLeds[0] = CRGB::Black;
       }
       FastLED.show();
       break;
@@ -137,10 +125,9 @@ void setup() {
   // sanity check delay - allows reprogramming if accidently blowing power w/leds
   delay(2000);
 
-  FastLED.addLeds<CHPSET, DATA_PIN_INFERIOR, CLOCK_PIN_INFERIOR, COLOR_ORDER>(ledsInferior, NUM_LEDS_INFERIOR);
-  FastLED.addLeds<CHPSET, DATA_PIN_LECTURA, CLOCK_PIN_LECTURA, COLOR_ORDER>(ledsLectura, NUM_LEDS_LECTURA);
-  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(ledsTop, NUM_LEDS_TOP);
-  FastLED.addLeds<CHPSET, DATA_PIN_TREN, CLOCK_PIN_TREN, COLOR_ORDER>(ledsTren, NUM_LEDS_TREN);
+  FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(ambientLeds, NUM_LEDS_AMBIENT);
+  FastLED.addLeds<CHPSET, DATA_PIN_READING, CLOCK_PIN_READING, COLOR_ORDER>(readingLeds, NUM_LEDS_READING);
+  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(topLeds, NUM_LEDS_TOP);
 
 
   FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
@@ -158,9 +145,9 @@ void rainbow_beat() {
   // Starting hue
   uint8_t beatA = beatsin8(9, 0, 255);
   uint8_t beatB = beatsin8(13, 0, 255);
-  fill_rainbow(ledsInferior, NUM_LEDS_INFERIOR, (beatA + beatB) / 2, 255 / NUM_LEDS_INFERIOR);
-  fill_rainbow(ledsLectura, NUM_LEDS_LECTURA, (beatA + beatB) / 2, NUM_LEDS_LECTURA / 255);
-  fill_rainbow(ledsTop, NUM_LEDS_TOP, (beatA + beatB) / 2, 255 / NUM_LEDS_TOP);
+  fill_rainbow(ambientLeds, NUM_LEDS_AMBIENT, (beatA + beatB) / 2, 255 / NUM_LEDS_AMBIENT);
+  fill_rainbow(readingLeds, NUM_LEDS_READING, (beatA + beatB) / 2, NUM_LEDS_READING / 255);
+  fill_rainbow(topLeds, NUM_LEDS_TOP, (beatA + beatB) / 2, 255 / NUM_LEDS_TOP);
 }
 
 void applyRandomPalette(struct CRGB *targetArray, CRGBPalette16 &pal, int numLeds, int indexScale, int minBrightness, int maxBrightness) {
@@ -175,10 +162,6 @@ void applyRandomPalette(struct CRGB *targetArray, CRGBPalette16 &pal, int numLed
   }
 }
 
-void maquetaSuau() {
-  applyRandomPalette(ledsTren, trenPalette, NUM_LEDS_TREN, 100, 50, 80);
-}
-
 void loop() {
   EVERY_N_MILLISECONDS(50) {
     for (uint8_t i = 0; i < numSwitches; ++i) {
@@ -189,9 +172,6 @@ void loop() {
   EVERY_N_MILLISECONDS(1000 / FRAMES_PER_SECOND) {
     if (isRainbowPlaying) {
       rainbow_beat();
-    }
-    if (isTrenOn) {
-      maquetaSuau();
     }
     if (isTrenOn || isRainbowPlaying) {
       FastLED.show();
