@@ -54,21 +54,6 @@ Switch switch5 = Switch(switchPins[5]);
 
 Switch toggleSwitches[numSwitches] = { switch0, switch1, switch2, switch3, switch4, switch5 };
 
-////// PALETTES /////
-
-// Gradient palette "bhw1_07_gp", originally from
-// http://soliton.vm.bytemark.co.uk/pub/cpt-city/bhw/bhw1/tn/bhw1_07.png.index.html
-// converted for FastLED with gammas (2.6, 2.2, 2.5)
-// Size: 8 bytes of program space.
-
-DEFINE_GRADIENT_PALETTE(trenPaletteSrc){
-  0, 229, 227, 1,
-  100, 255, 184, 83,
-  200, 255, 255, 125,
-  255, 255, 184, 83
-};
-CRGBPalette16 trenPalette = trenPaletteSrc;
-
 void toggleCallbackFunction(void *s) {
   int *switchIndex = (int *)s;  // convert s to int pointer (int *)
     switch ((*switchIndex)) {
