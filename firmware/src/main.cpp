@@ -73,10 +73,6 @@ DEFINE_GRADIENT_PALETTE(trenPaletteSrc){
 };
 CRGBPalette16 trenPalette = trenPaletteSrc;
 
-void regularLightSwitcher(int switchIndex) {
-  
-}
-
 void toggleCallbackFunction(void *s) {
   int *switchIndex = (int *)s;  // convert s to int pointer (int *)
     switch ((*switchIndex)) {
