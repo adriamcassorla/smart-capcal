@@ -10,7 +10,7 @@
 #define MAX_AMPS 30000
 #define FRAMES_PER_SECOND 24
 
-#define NUM_LEDS_AMBIENT 120
+#define NUM_LEDS_AMBIENT 192
 #define NUM_LEDS_READING 288
 #define NUM_LEDS_TOP 107
 #define NUM_SWITCHES 6
@@ -88,8 +88,17 @@ CRGBPalette16 topPalette = lightGreenPalette;
 
 void toggleCallbackFunction(void *s) {
   int *switchIndex = (int *)s;  // converts s to int pointer (int *)
+    
+    // Turns off animations for regular lights
+    if ((*switchIndex) != 0 && (*switchIndex) != 5) {
+      isChromotherapyOn = false;
+      isRainbowPlaying = false;
+      FastLED.clear();
+    }
+
     switch ((*switchIndex)) {
     case 0:
+      isChromotherapyOn = false;
       isRainbowPlaying = !isRainbowPlaying;
       if (!isRainbowPlaying) {
         FastLED.clear();
@@ -103,13 +112,14 @@ void toggleCallbackFunction(void *s) {
       } else {
         fill_solid(topLeds, NUM_LEDS_TOP, CRGB::Black);
       }
-      FastLED.show();
       break;
     case 5:
       isChromotherapyOn = !isChromotherapyOn;
-       if (!isChromotherapyOn) {
+      isRainbowPlaying = false;
+      if (!isChromotherapyOn)
+      {
         FastLED.clear();
-       }
+      }
       break;
     case 2:
       isLeftOn = !isLeftOn;
@@ -122,7 +132,6 @@ void toggleCallbackFunction(void *s) {
           readingLeds[i] = CRGB::Black;
         }
       }
-      FastLED.show();
       break;
     case 3:
       isRightOn = !isRightOn;
@@ -136,11 +145,11 @@ void toggleCallbackFunction(void *s) {
         }
         readingLeds[0] = CRGB::Black;
       }
-      FastLED.show();
       break;
     default:
       break;
   }
+  FastLED.show();
 }
 
 //////////////
