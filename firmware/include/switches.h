@@ -3,7 +3,9 @@
 
 class Switches {
 public:
-    Switches();  
+    Switches(); 
+    void init() const;
+    void poll() const; 
 private:
     
 };
