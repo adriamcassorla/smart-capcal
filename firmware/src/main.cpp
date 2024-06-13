@@ -1,3 +1,5 @@
+#define FASTLED_FORCE_SOFTWARE_SPI
+
 #include <Arduino.h>
 #include <avdweb_Switch.h>
 #include <FastLED.h>
@@ -8,17 +10,17 @@
 #define MAX_AMPS 30000
 #define FRAMES_PER_SECOND 24
 
-#define NUM_LEDS_AMBIENT 193
+#define NUM_LEDS_AMBIENT 120
 #define NUM_LEDS_READING 288
 #define NUM_LEDS_TOP 107
 #define NUM_SWITCHES 6
 
-#define CLOCK_PIN_AMBIENT 13 // SCK
-#define DATA_PIN_AMBIENT 11 // MOSI
-#define CLOCK_PIN_TOP 27 // SCK1
-#define DATA_PIN_TOP 26 // MOSI1
-#define CLOCK_PIN_READING 49 // SCK2
-#define DATA_PIN_READING 50 // MOSI2
+#define CLOCK_PIN_AMBIENT 0 // 13 SCK
+#define DATA_PIN_AMBIENT 1 // 11 MOSI
+#define CLOCK_PIN_TOP  10// 27 SCK1
+#define DATA_PIN_TOP 11 // 26 MOSI1
+#define CLOCK_PIN_READING 6 // 49 SCK2
+#define DATA_PIN_READING 7 // 50 MOSI2
 
 #define POTEN_1 A1
 #define POTEN_2 A0
@@ -88,8 +90,10 @@ void toggleCallbackFunction(void *s) {
   int *switchIndex = (int *)s;  // converts s to int pointer (int *)
     switch ((*switchIndex)) {
     case 0:
-      FastLED.clear();
       isRainbowPlaying = !isRainbowPlaying;
+      if (!isRainbowPlaying) {
+        FastLED.clear();
+      }
       break;
     case 1:
     case 4:
@@ -105,7 +109,7 @@ void toggleCallbackFunction(void *s) {
       isChromotherapyOn = !isChromotherapyOn;
        if (!isChromotherapyOn) {
         FastLED.clear();
-      }
+       }
       break;
     case 2:
       isLeftOn = !isLeftOn;
@@ -137,6 +141,37 @@ void toggleCallbackFunction(void *s) {
     default:
       break;
   }
+}
+
+//////////////
+// Helprers
+//////////////
+
+void rainbow_beat() {
+  // Starting hue
+  uint8_t beatA = beatsin8(9, 0, 255);
+  uint8_t beatB = beatsin8(13, 0, 255);
+  fill_rainbow(ambientLeds, NUM_LEDS_AMBIENT, (beatA + beatB) / 2, 255 / NUM_LEDS_AMBIENT);
+  fill_rainbow(readingLeds, NUM_LEDS_READING, (beatA + beatB) / 2, NUM_LEDS_READING / 255);
+  fill_rainbow(topLeds, NUM_LEDS_TOP, (beatA + beatB) / 2, 255 / NUM_LEDS_TOP);
+}
+
+void applyRandomPalette(struct CRGB *targetArray, CRGBPalette16 &pal, int numLeds, int indexScale, int minBrightness, int maxBrightness) {
+  for (int i = 0; i < numLeds; i++) {
+    uint8_t brightness = inoise8(i, millis() / 30);
+    uint16_t index = inoise16(i * indexScale, millis() / 20);
+
+    targetArray[i] = ColorFromPalette(
+      pal,
+      constrain(index, 0, numLeds - 1),
+      constrain(brightness, minBrightness, maxBrightness));
+  }
+}
+
+void chromotherapy(int maxBrightness) {
+  applyRandomPalette(ambientLeds, bottomPalette, NUM_LEDS_AMBIENT, 75, maxBrightness * 0.2, maxBrightness);
+  applyRandomPalette(readingLeds, topPalette, NUM_LEDS_READING, 10, maxBrightness * 0.2, maxBrightness * 0.7);
+  applyRandomPalette(topLeds, topPalette, NUM_LEDS_TOP, 100, maxBrightness * 0.2, maxBrightness);
 }
 
 void setup() {
@@ -180,33 +215,3 @@ void loop() {
   }
 }
 
-//////////////
-// Helprers
-//////////////
-
-void rainbow_beat() {
-  // Starting hue
-  uint8_t beatA = beatsin8(9, 0, 255);
-  uint8_t beatB = beatsin8(13, 0, 255);
-  fill_rainbow(ambientLeds, NUM_LEDS_AMBIENT, (beatA + beatB) / 2, 255 / NUM_LEDS_AMBIENT);
-  fill_rainbow(readingLeds, NUM_LEDS_READING, (beatA + beatB) / 2, NUM_LEDS_READING / 255);
-  fill_rainbow(topLeds, NUM_LEDS_TOP, (beatA + beatB) / 2, 255 / NUM_LEDS_TOP);
-}
-
-void applyRandomPalette(struct CRGB *targetArray, CRGBPalette16 &pal, int numLeds, int indexScale, int minBrightness, int maxBrightness) {
-  for (int i = 0; i < numLeds; i++) {
-    uint8_t brightness = inoise8(i, millis() / 30);
-    uint16_t index = inoise16(i * indexScale, millis() / 20);
-
-    targetArray[i] = ColorFromPalette(
-      pal,
-      constrain(index, 0, numLeds - 1),
-      constrain(brightness, minBrightness, maxBrightness));
-  }
-}
-
-void chromotherapy(int maxBrightness) {
-  applyRandomPalette(ambientLeds, bottomPalette, NUM_LEDS_AMBIENT, 75, maxBrightness * 0.2, maxBrightness);
-  applyRandomPalette(readingLeds, topPalette, NUM_LEDS_READING, 10, maxBrightness * 0.2, maxBrightness * 0.7);
-  applyRandomPalette(topLeds, topPalette, NUM_LEDS_TOP, 100, maxBrightness * 0.2, maxBrightness);
-}
