@@ -33,11 +33,15 @@ Switch toggleSwitches[NUM_SWITCHES] = { switch0, switch1, switch2, switch3, swit
 
 void toggleCallbackFunction(void *s) {
   int *switchIndex = (int *)s;  // converts s to int pointer (int *)
-    
-    // Turns off animations for regular lights
-    if ((*switchIndex) != 0 && (*switchIndex) != 5) {
-      demoLights.stop();
-    }
+
+  // Turns off animations and resets all other lights
+  if ((*switchIndex) != 0 && (*switchIndex) != 5 && demoLights.isOn)
+  {
+    demoLights.stop();
+    ambientLight.reset();
+    readingLeft.reset();
+    readingRight.reset();
+  }
 
     switch ((*switchIndex)) {
     case 0:

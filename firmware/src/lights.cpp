@@ -10,7 +10,7 @@ ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse):
   readingLeds(array), 
       numLeds(length),
       isOn(false), 
-      brightness(255),
+      brightness(MAX_BRIGHTNESS),
       isReversed(reverse)
       {}
 
@@ -28,6 +28,11 @@ void ReadingLight::setBrightness(uint8_t value) {
   brightness = value;
 }
 
+void ReadingLight::reset() {
+  isOn = false;
+  brightness = MAX_BRIGHTNESS;
+}
+
 /////
 // Ambient Light Implementation
 /////
@@ -42,7 +47,7 @@ AmbientLight::AmbientLight(
       top(topArray), 
       numTop(topLength), 
       isOn(false), 
-      brightness(255) {}
+      brightness(MAX_BRIGHTNESS) {}
 
 void AmbientLight::toggle() {
   isOn = !isOn;
@@ -61,6 +66,10 @@ void AmbientLight::setBrightness(uint8_t value) {
   brightness = value;
 }
 
+void AmbientLight::reset() {
+  isOn = false;
+  brightness = MAX_BRIGHTNESS;
+}
 
 /////
 // Demo Lights Implementation
@@ -80,7 +89,7 @@ DemoLights::DemoLights(
       reading(readingArray), 
       numReading(readingLength), 
       isOn(false), 
-      brightness(255),
+      brightness(MAX_BRIGHTNESS),
       activeMode(Mode::Rainbow)
       {}
 
@@ -124,9 +133,9 @@ void DemoLights::loop() {
 void DemoLights::rainbow_beat() {
   uint8_t beatA = beatsin8(9, 0, brightness);
   uint8_t beatB = beatsin8(13, 0, brightness);
-  fill_rainbow(ambient, numAmbient, (beatA + beatB) / 2, 255 / numAmbient);
-  fill_rainbow(reading, numReading, (beatA + beatB) / 2, numReading / 255);
-  fill_rainbow(top, numTop, (beatA + beatB) / 2, 255 / numTop);
+  fill_rainbow(ambient, numAmbient, (beatA + beatB) / 2, MAX_BRIGHTNESS / numAmbient);
+  fill_rainbow(reading, numReading, (beatA + beatB) / 2, numReading / MAX_BRIGHTNESS);
+  fill_rainbow(top, numTop, (beatA + beatB) / 2, MAX_BRIGHTNESS / numTop);
 }
 
 void DemoLights::applyRandomPalette(

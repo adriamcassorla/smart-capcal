@@ -35,14 +35,15 @@ public:
     ReadingLight(struct CRGB *array, uint8_t length, bool reverse);  
     void toggle();
     void setBrightness(uint8_t value);
+    void reset();
 
-private:
-  struct CRGB *readingLeds;
-  uint8_t numLeds;
+  private:
+    struct CRGB *readingLeds;
+    uint8_t numLeds;
 
-  bool isOn;
-  uint8_t brightness;
-  bool isReversed;
+    bool isOn;
+    uint8_t brightness;
+    bool isReversed;
 };
 
 class AmbientLight {
@@ -55,15 +56,16 @@ public:
     );  
     void toggle();
     void setBrightness(uint8_t value);
+    void reset();
 
-private:
-  struct CRGB *ambient;
-  uint8_t numAmbient;
-  struct CRGB *top;
-  uint8_t numTop;
+  private:
+    struct CRGB *ambient;
+    uint8_t numAmbient;
+    struct CRGB *top;
+    uint8_t numTop;
 
-  bool isOn;
-  uint8_t brightness;
+    bool isOn;
+    uint8_t brightness;
 };
 
 class DemoLights {
