@@ -53,7 +53,7 @@ public:
       uint8_t ambientLength, 
       struct CRGB *topArray, 
       uint8_t topLength
-    );  
+    );
     void toggle();
     void setBrightness(uint8_t value);
     void reset();

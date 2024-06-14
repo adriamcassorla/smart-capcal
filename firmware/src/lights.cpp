@@ -18,7 +18,8 @@ void ReadingLight::toggle() {
   isOn = !isOn;
   
   CRGB::HTMLColorCode color = isOn ? CRGB::Goldenrod : CRGB::Black;
-  for (uint16_t i = numLeds - 1; i > numLeds / 2; --i) {
+  for (uint16_t i = 0; i < numLeds; ++i)
+  {
     readingLeds[i] = color;
   }
   FastLED.show();
