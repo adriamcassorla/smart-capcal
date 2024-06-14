@@ -81,14 +81,14 @@ DemoLights::DemoLights(
       uint8_t topLength,
       struct CRGB *readingArray, 
       uint16_t readingLength
-    )
-    : ambient(ambientArray), 
+    ) :
+      isOn(false), 
+      ambient(ambientArray), 
       numAmbient(ambientLength), 
       top(topArray), 
       numTop(topLength), 
       reading(readingArray), 
       numReading(readingLength), 
-      isOn(false), 
       brightness(MAX_BRIGHTNESS),
       activeMode(Mode::Rainbow)
       {}
@@ -96,6 +96,7 @@ DemoLights::DemoLights(
 void DemoLights::toggle() {
   isOn = !isOn;
   FastLED.clear();
+  FastLED.show();
 }
 
 void DemoLights::setBrightness(uint8_t value) {
@@ -109,6 +110,7 @@ void DemoLights::setMode(Mode mode) {
 void DemoLights::stop() {
   isOn = false;
   FastLED.clear();
+  FastLED.show();
 }
 
 void DemoLights::loop() {
