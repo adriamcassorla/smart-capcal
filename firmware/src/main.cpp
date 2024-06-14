@@ -35,9 +35,12 @@ void toggleCallbackFunction(void *s) {
   int *switchIndex = (int *)s;  // converts s to int pointer (int *)
 
   // Turns off animations and resets all other lights
-  if ((*switchIndex) != 0 && (*switchIndex) != 5 && demoLights.isOn)
+  if (demoLights.isOn && (*switchIndex) != 0 && (*switchIndex) != 5)
   {
     demoLights.stop();
+  }
+  else if ((*switchIndex) == 0 || (*switchIndex) == 5)
+  {
     ambientLight.reset();
     readingLeft.reset();
     readingRight.reset();
