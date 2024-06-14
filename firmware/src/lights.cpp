@@ -6,21 +6,22 @@
 /////
 // Reading Light Implementation
 /////
-ReadingLight::ReadingLight(struct CRGB *array, uint8_t length) 
-    : readingLeds(array), numLeds(length), isOn(false), brightness(255) {
-  // Initially, turn off all the LEDs
-  for (uint8_t i = 0; i < numLeds; ++i) {
-      readingLeds[i] = CRGB::Black;
-  }
-}
+ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse): 
+  readingLeds(array), 
+      numLeds(length),
+      isOn(false), 
+      brightness(255),
+      isReversed(reverse)
+      {}
 
-void ReadingLight::toggle(bool reverse) {
+void ReadingLight::toggle() {
   isOn = !isOn;
   
   CRGB::HTMLColorCode color = isOn ? CRGB::Goldenrod : CRGB::Black;
   for (uint16_t i = numLeds - 1; i > numLeds / 2; --i) {
     readingLeds[i] = color;
   }
+  FastLED.show();
 }
 
 void ReadingLight::setBrightness(uint8_t value) {
@@ -37,20 +38,11 @@ AmbientLight::AmbientLight(
       uint8_t topLength
     )
     : ambient(ambientArray), 
-      top(topArray), 
       numAmbient(ambientLength), 
+      top(topArray), 
       numTop(topLength), 
       isOn(false), 
-      brightness(255) {
-    
-  // Initially, turn off all the LEDs
-  for (uint8_t i = 0; i < numAmbient; ++i) {
-    ambient[i] = CRGB::Black;
-  }
-  for (uint8_t i = 0; i < numTop; ++i) {
-    top[i] = CRGB::Black;
-  }
-}
+      brightness(255) {}
 
 void AmbientLight::toggle() {
   isOn = !isOn;
@@ -62,6 +54,7 @@ void AmbientLight::toggle() {
   for (uint8_t i = 0; i < numTop; ++i) {
     top[i] = color;
   }
+  FastLED.show();
 }
 
 void AmbientLight::setBrightness(uint8_t value) {
@@ -78,11 +71,11 @@ DemoLights::DemoLights(
       struct CRGB *topArray, 
       uint8_t topLength,
       struct CRGB *readingArray, 
-      uint8_t readingLength
+      uint16_t readingLength
     )
     : ambient(ambientArray), 
-      top(topArray), 
       numAmbient(ambientLength), 
+      top(topArray), 
       numTop(topLength), 
       reading(readingArray), 
       numReading(readingLength), 
@@ -91,17 +84,17 @@ DemoLights::DemoLights(
       activeMode(Mode::Rainbow)
       {}
 
+void DemoLights::toggle() {
+  isOn = !isOn;
+  FastLED.clear();
+}
+
 void DemoLights::setBrightness(uint8_t value) {
   brightness = value;
 }
 
 void DemoLights::setMode(Mode mode) {
   activeMode = mode;
-}
-
-void DemoLights::toggle() {
-  isOn = !isOn;
-  FastLED.clear();
 }
 
 void DemoLights::stop() {
@@ -154,3 +147,28 @@ void DemoLights::applyRandomPalette(
       constrain(brightness, minBrightness, maxBrightness));
   }
 }
+
+/////
+// GENERAL SETUP
+/////
+
+CRGB ambientLeds[NUM_LEDS_AMBIENT];
+CRGB readingLeds[NUM_LEDS_READING * 2];
+CRGB topLeds[NUM_LEDS_TOP];
+
+ReadingLight readingLeft(readingLeds + NUM_LEDS_READING, NUM_LEDS_READING, true);
+ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
+AmbientLight ambientLight(ambientLeds, NUM_LEDS_AMBIENT, topLeds, NUM_LEDS_TOP);
+DemoLights demoLights(ambientLeds, NUM_LEDS_AMBIENT, topLeds, NUM_LEDS_TOP, readingLeds, NUM_LEDS_READING * 2);
+
+void setupLights() {
+  FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(ambientLeds, NUM_LEDS_AMBIENT);
+  FastLED.addLeds<CHPSET, DATA_PIN_READING, CLOCK_PIN_READING, COLOR_ORDER>(readingLeds, NUM_LEDS_READING * 2);
+  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(topLeds, NUM_LEDS_TOP);
+
+
+  FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
+  FastLED.setBrightness(MAX_BRIGHTNESS);
+  FastLED.clear();
+  FastLED.show();
+};
