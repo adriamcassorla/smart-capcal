@@ -13,4 +13,7 @@ private:
     
 };
 
+void potentiometersSetup();
+void potentiometersLoop();
+
 #endif // POTENTIOMETERS_H

@@ -22,4 +22,7 @@ private:
   static void callback(void *s);
 };
 
+void switchesSetup();
+void switchesLoop();
+
 #endif // SWITCHES_H

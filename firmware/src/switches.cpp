@@ -2,11 +2,6 @@
 #include "lights.h"
 #include "avdweb_Switch.h"
 
-// Define the pin numbers for the switches
-uint8_t switchPins[] = {25, 31, 27, 28, 29, 30};
-int switchPinsIds[] = {0, 1, 2, 3, 4, 5};
-Switches switches(switchPins, switchPinsIds);
-
 Switches::Switches(uint8_t *p, int *id) : pins(p), pinIds(id)
 {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
@@ -71,4 +66,26 @@ void Switches::callback(void *s)
   default:
     break;
   }
+}
+
+/////////
+// SETUP
+/////////
+
+// Define the pin numbers for the switches
+uint8_t switchPins[] = {25, 31, 27, 28, 29, 30};
+int switchPinsIds[] = {0, 1, 2, 3, 4, 5};
+Switches switches(switchPins, switchPinsIds);
+
+void switchesSetup()
+{
+  switches.setup();
+}
+
+////////
+// LOOP
+////////
+void switchesLoop()
+{
+  switches.poll();
 }

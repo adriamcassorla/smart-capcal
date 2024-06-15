@@ -15,22 +15,19 @@ void setup() {
   delay(INITIAL_DELAY);
 
   // Internal parts setup
-  setupLights();
-  switches.setup();
+  lightsSetup();
+  switchesSetup();
+  potentiometersSetup();
 }
 
 void loop() {
   EVERY_N_MILLISECONDS(50) {
-    switches.poll();
-    uint8_t brightness = map(analogRead(POTEN_3), 0, 1023, 10, MAX_BRIGHTNESS);
-    demoLights.setBrightness(brightness);
+    switchesLoop();
+    potentiometersLoop();
   }
 
   EVERY_N_MILLISECONDS(1000 / FRAMES_PER_SECOND) {
-    demoLights.loop();
-    if (demoLights.isOn) {
-      FastLED.show();
-    }
+    lightsLoop();
   }
 }
 

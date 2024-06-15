@@ -160,9 +160,9 @@ void DemoLights::applyRandomPalette(
   }
 }
 
-/////
-// GENERAL SETUP
-/////
+/////////
+// SETUP
+/////////
 
 CRGB ambientLeds[NUM_LEDS_AMBIENT];
 CRGB readingLeds[NUM_LEDS_READING * 2];
@@ -173,14 +173,27 @@ ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
 AmbientLight ambientLight(ambientLeds, NUM_LEDS_AMBIENT, topLeds, NUM_LEDS_TOP);
 DemoLights demoLights(ambientLeds, NUM_LEDS_AMBIENT, topLeds, NUM_LEDS_TOP, readingLeds, NUM_LEDS_READING * 2);
 
-void setupLights() {
+void lightsSetup()
+{
   FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(ambientLeds, NUM_LEDS_AMBIENT);
   FastLED.addLeds<CHPSET, DATA_PIN_READING, CLOCK_PIN_READING, COLOR_ORDER>(readingLeds, NUM_LEDS_READING * 2);
   FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(topLeds, NUM_LEDS_TOP);
-
 
   FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
   FastLED.setBrightness(MAX_BRIGHTNESS);
   FastLED.clear();
   FastLED.show();
+};
+
+//////////
+// LOOP
+//////////
+
+void lightsLoop()
+{
+  demoLights.loop();
+  if (demoLights.isOn)
+  {
+    FastLED.show();
+  }
 };

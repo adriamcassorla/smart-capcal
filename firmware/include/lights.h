@@ -111,6 +111,7 @@ public:
     );
 };
 
-void setupLights();
+void lightsSetup();
+void lightsLoop();
 
 #endif // LIGHTS_H
