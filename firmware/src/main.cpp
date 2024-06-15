@@ -7,8 +7,11 @@
 #include "switches.h"
 #include "potentiometers.h"
 
+#define SECOND 1000
+#define INITIAL_DELAY 2 * SECOND
 #define FRAMES_PER_SECOND 24
-#define INITIAL_DELAY 2000
+#define ANIMATION_INTERVAL SECOND / FRAMES_PER_SECOND
+#define POLL_INTERVAL 50
 
 void setup() {
   // sanity check delay
@@ -21,12 +24,14 @@ void setup() {
 }
 
 void loop() {
-  EVERY_N_MILLISECONDS(50) {
+  EVERY_N_MILLISECONDS(POLL_INTERVAL)
+  {
     switchesLoop();
     potentiometersLoop();
   }
 
-  EVERY_N_MILLISECONDS(1000 / FRAMES_PER_SECOND) {
+  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL)
+  {
     lightsLoop();
   }
 }
