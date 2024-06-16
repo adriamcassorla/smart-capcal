@@ -2,24 +2,34 @@
 #define SWITCHES_H
 
 #include <avdweb_Switch.h>
+#include "lights.h"
 #include <Arduino.h>
 
-#define NUM_SWITCHES 6
+#define NUM_SWITCHES 3
 
-extern uint8_t switchPins[NUM_SWITCHES];
-extern int switchPinsIds[NUM_SWITCHES];
-extern class Switches switches;
-class Switches {
+extern uint8_t leftPins[NUM_SWITCHES];
+extern uint8_t rightPins[NUM_SWITCHES];
+extern class MultiSwitch leftSwitches;
+extern class MultiSwitch rightSwitches;
+
+struct MultiSwitchCallbackData
+{
+  MultiSwitch *instance;
+  int pinId;
+};
+
+class MultiSwitch
+{
 public:
-  Switches(uint8_t *p, int *ids);
+  MultiSwitch(uint8_t *pinNumbers, ReadingLight *light);
   void setup();
   void poll();
 
 private:
-  uint8_t *pins;
-  int *pinIds;
+  static int pinIds[NUM_SWITCHES];
   Switch *toggleSwitches[NUM_SWITCHES];
-  static void callback(void *s);
+  ReadingLight *readingLight;
+  static void callback(void *callbackData);
 };
 
 void switchesSetup();
