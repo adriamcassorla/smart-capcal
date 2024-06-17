@@ -22,19 +22,19 @@ void fillColourWithBrightness(
 /////
 // Reading Light Implementation
 /////
-ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse): 
-  readingLeds(array), 
+ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse)
+    : readingLeds(array),
       numLeds(length),
-      isOn(false), 
-      brightness(MAX_BRIGHTNESS),
+      isOn(false),
+      brightness(DEFAULT_BRIGHTNESS),
       isReversed(reverse)
-      {}
+{
+}
 
 void ReadingLight::toggle() {
   isOn = !isOn;
-
-  uint8_t newBrightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  fillColourWithBrightness(readingLeds, numLeds, newBrightness);
+  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
+  fillColourWithBrightness(readingLeds, numLeds, brightness);
   FastLED.show();
 }
 
@@ -44,31 +44,25 @@ void ReadingLight::setBrightness(uint8_t value) {
 
 void ReadingLight::reset() {
   isOn = false;
-  brightness = MAX_BRIGHTNESS;
+  brightness = DEFAULT_BRIGHTNESS;
 }
 
 /////
 // Ambient Light Implementation
 /////
-AmbientLight::AmbientLight(
-      struct CRGB *ambientArray, 
-      uint8_t ambientLength, 
-      struct CRGB *topArray, 
-      uint8_t topLength
-    )
-    : ambient(ambientArray), 
-      numAmbient(ambientLength), 
-      top(topArray), 
-      numTop(topLength), 
-      isOn(false), 
-      brightness(MAX_BRIGHTNESS) {}
+AmbientLight::AmbientLight(LightSection *sections, uint8_t length)
+    : lightSections(sections),
+      numSections(length),
+      isOn(false),
+      brightness(DEFAULT_BRIGHTNESS)
+{
+}
 
 void AmbientLight::toggle() {
   isOn = !isOn;
-
-  uint8_t newBrightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  fillColourWithBrightness(ambient, numAmbient, newBrightness);
-  fillColourWithBrightness(top, numTop, newBrightness);
+  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
+  // fillColourWithBrightness(ambientLeft, numAmbient, brightness);
+  // fillColourWithBrightness(top, numTop, brightness);
   FastLED.show();
 }
 
@@ -78,11 +72,14 @@ void AmbientLight::setBrightness(uint8_t value) {
     brightness = value;
     if (isOn)
     {
-      fillColourWithBrightness(top, numTop, brightness);
-      fillColourWithBrightness(ambient, numAmbient, brightness);
-      FastLED.show();
+      mapNewBrightness(brightness);
     }
   }
+}
+
+void AmbientLight::mapNewBrightness(uint8_t newBrightness)
+{
+  FastLED.show();
 }
 
 void AmbientLight::reset() {
@@ -93,24 +90,14 @@ void AmbientLight::reset() {
 /////
 // Demo Lights Implementation
 /////
-DemoLights::DemoLights(
-      struct CRGB *ambientArray, 
-      uint8_t ambientLength, 
-      struct CRGB *topArray, 
-      uint8_t topLength,
-      struct CRGB *readingArray, 
-      uint16_t readingLength
-    ) :
-      isOn(false), 
-      ambient(ambientArray), 
-      numAmbient(ambientLength), 
-      top(topArray), 
-      numTop(topLength), 
-      reading(readingArray), 
-      numReading(readingLength), 
-      brightness(MAX_BRIGHTNESS),
+DemoLights::DemoLights(LightSection *sections, uint8_t length)
+    : isOn(false),
+      lightSections(sections),
+      numSections(length),
+      brightness(DEFAULT_BRIGHTNESS),
       activeMode(Mode::Rainbow)
-      {}
+{
+}
 
 void DemoLights::toggle() {
   isOn = !isOn;
@@ -140,10 +127,8 @@ void DemoLights::loop() {
     break;
     
     case Mode::Chromotherapy:
-      applyRandomPalette(ambient, bottomPalette, numAmbient, 100, brightness * 0.2, brightness * 0.8);
-      applyRandomPalette(top, topPalette, numTop, 100, brightness * 0.2, brightness);
-      applyRandomPalette(reading, topPalette, numReading, 10, brightness * 0.2, brightness * 0.7);
-    break;
+      chromoteraphy_beat();
+      break;
 
     default:
       break;
@@ -154,9 +139,28 @@ void DemoLights::loop() {
 void DemoLights::rainbow_beat() {
   uint8_t beatA = beatsin8(9, 0, brightness);
   uint8_t beatB = beatsin8(13, 0, brightness);
-  fill_rainbow(ambient, numAmbient, (beatA + beatB) / 2, MAX_BRIGHTNESS / numAmbient);
-  fill_rainbow(reading, numReading, (beatA + beatB) / 2, numReading / MAX_BRIGHTNESS);
-  fill_rainbow(top, numTop, (beatA + beatB) / 2, MAX_BRIGHTNESS / numTop);
+  for (uint8_t n = 0; n < NUM_SECTIONS; n++)
+  {
+    fill_rainbow(
+        lightSections[n].ledsArray,
+        lightSections[n].length,
+        (beatA + beatB) / 2,
+        lightSections[n].config.maxBrightness / lightSections[n].length);
+  }
+}
+
+void DemoLights::chromoteraphy_beat()
+{
+  for (uint8_t n = 0; n < NUM_SECTIONS; n++)
+  {
+    applyRandomPalette(
+        lightSections[n].ledsArray,
+        topPalette,
+        lightSections[n].length,
+        100,
+        brightness * 0.2,
+        lightSections[n].config.maxBrightness);
+  }
 }
 
 void DemoLights::applyRandomPalette(
@@ -188,8 +192,61 @@ CRGB topLeds[NUM_LEDS_TOP];
 
 ReadingLight readingLeft(readingLeds + NUM_LEDS_READING, NUM_LEDS_READING, true);
 ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
-AmbientLight ambientLight(ambientLeds, NUM_LEDS_AMBIENT, topLeds, NUM_LEDS_TOP);
-DemoLights demoLights(ambientLeds, NUM_LEDS_AMBIENT, topLeds, NUM_LEDS_TOP, readingLeds, NUM_LEDS_READING * 2);
+
+// Section configurations
+SectionConfig ambientConfig = {
+  lowerBound : 30,
+  upperBound : MAX_BRIGHTNESS,
+  maxBrightness : MAX_BRIGHTNESS,
+};
+SectionConfig topConfig = {
+  lowerBound : 100,
+  upperBound : MAX_BRIGHTNESS,
+  maxBrightness : MAX_BRIGHTNESS
+};
+SectionConfig dioramaConfig = {
+  lowerBound : MAX_BRIGHTNESS / 2,
+  upperBound : MAX_BRIGHTNESS,
+  maxBrightness : MAX_BRIGHTNESS / 2,
+};
+SectionConfig readingConfig = {
+  lowerBound : 200,
+  upperBound : MAX_BRIGHTNESS,
+  maxBrightness : MAX_BRIGHTNESS / 2,
+};
+
+// Sections initialisation
+LightSection ambientLeft = {
+  ledsArray : ambientLeds + LEFT_AMBIENT_FIRST_LED,
+  length : NUM_LEDS_SIDE_AMBIENT - 1, // Problems with soldering...
+  config : ambientConfig
+};
+LightSection ambientRight = {
+  ledsArray : ambientLeds,
+  length : NUM_LEDS_SIDE_AMBIENT,
+  config : ambientConfig
+};
+LightSection top = {
+  ledsArray : topLeds,
+  length : NUM_LEDS_TOP,
+  config : topConfig
+};
+LightSection diorama = {
+  ledsArray : ambientLeds + DIORAMA_FIRST_LED,
+  length : NUM_LEDS_DIORAMA,
+  config : dioramaConfig
+};
+LightSection reading = {
+  ledsArray : readingLeds,
+  length : NUM_LEDS_READING,
+  config : readingConfig
+};
+
+// Assignation to the main sections array
+LightSection lightSections[NUM_SECTIONS] = {ambientLeft, ambientRight, top, diorama, reading};
+
+AmbientLight ambientLight(lightSections, NUM_SECTIONS);
+DemoLights demoLights(lightSections, NUM_SECTIONS);
 
 void lightsSetup()
 {

@@ -8,12 +8,20 @@
 #define COLOR_ORDER BGR
 #define VOLTS 5
 #define MAX_AMPS 30000
+
 #define MAX_BRIGHTNESS 255
+#define MIN_BRIGHTNESS 50
 #define DEFAULT_BRIGHTNESS 218
 
-#define NUM_LEDS_AMBIENT 192
+#define NUM_LEDS_AMBIENT 192 // 120 are AMBIENT and 72 are DIORAMA
 #define NUM_LEDS_READING 144
 #define NUM_LEDS_TOP 107
+
+#define NUM_LEDS_DIORAMA 72 // Initialised as part of AMBIENT
+#define NUM_LEDS_SIDE_AMBIENT 60
+#define DIORAMA_FIRST_LED 60
+#define LEFT_AMBIENT_FIRST_LED 142
+#define NUM_SECTIONS 5
 
 #define CLOCK_PIN_AMBIENT 0 // 13 SCK
 #define DATA_PIN_AMBIENT 1 // 11 MOSI
@@ -23,7 +31,7 @@
 #define DATA_PIN_READING 7 // 50 MOSI2
 
 #define WARM_WHITE_HUE 30
-#define WARM_WHITE_SAT 218
+#define WARM_WHITE_SAT 215
 
 extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
@@ -34,12 +42,26 @@ extern class ReadingLight readingRight;
 extern class AmbientLight ambientLight;
 extern class DemoLights demoLights;
 
+struct SectionConfig
+{
+  uint8_t lowerBound;
+  uint8_t upperBound;
+  uint8_t maxBrightness;
+};
+
+struct LightSection
+{
+  struct CRGB *ledsArray;
+  uint16_t length;
+  SectionConfig config;
+};
+
 void fillColourWithBrightness(
     struct CRGB *ledsArray,
     uint16_t length,
     uint8_t brightness,
-    uint8_t hue = WARM_WHITE_HUE,
-    uint8_t saturation = WARM_WHITE_SAT);
+    uint8_t hue,
+    uint8_t saturation);
 
 class ReadingLight {
 public:
@@ -59,67 +81,51 @@ public:
 
 class AmbientLight {
 public:
-    AmbientLight(
-      struct CRGB *ambientArray, 
-      uint8_t ambientLength, 
-      struct CRGB *topArray, 
-      uint8_t topLength
-    );
-    void toggle();
-    void setBrightness(uint8_t value);
-    void reset();
+  AmbientLight(LightSection *lightSections, uint8_t length);
+  void toggle();
+  void setBrightness(uint8_t value);
+  void reset();
 
-  private:
-    struct CRGB *ambient;
-    uint8_t numAmbient;
-    struct CRGB *top;
-    uint8_t numTop;
+private:
+  struct LightSection *lightSections;
+  uint8_t numSections;
+  bool isOn;
+  uint8_t brightness;
 
-    bool isOn;
-    uint8_t brightness;
+  void mapNewBrightness(uint8_t newBrightness);
 };
 
 class DemoLights {
 public:
-    DemoLights(
-      struct CRGB *ambientArray, 
-      uint8_t ambientLength, 
-      struct CRGB *topArray, 
-      uint8_t topLength,
-      struct CRGB *readingArray, 
-      uint16_t readingLength
-    );  
-    enum Mode {
-        Rainbow,
-        Chromotherapy,
-    };
-    void toggle();
-    void setBrightness(uint8_t value);
-    void setMode(Mode mode);
-    void stop();
-    void loop();
-    bool isOn;
+  DemoLights(LightSection *lightSections, uint8_t length);
+  enum Mode
+  {
+    Rainbow,
+    Chromotherapy,
+  };
+  void toggle();
+  void setBrightness(uint8_t value);
+  void setMode(Mode mode);
+  void stop();
+  void loop();
+  bool isOn;
 
-  private:
-  struct CRGB *ambient;
-  uint8_t numAmbient;
-  struct CRGB *top;
-  uint8_t numTop;
-  struct CRGB *reading;
-  uint16_t numReading;
+private:
+  struct LightSection *lightSections;
+  uint8_t numSections;
 
-    uint8_t brightness;
-    Mode activeMode;
+  uint8_t brightness;
+  Mode activeMode;
 
-    void rainbow_beat();
-    void applyRandomPalette(
-      struct CRGB *targetArray, 
-      CRGBPalette16 &pal, 
-      uint16_t numLeds, 
-      uint8_t indexScale, 
-      uint8_t minBrightness, 
-      uint8_t maxBrightness
-    );
+  void applyRandomPalette(
+      struct CRGB *targetArray,
+      CRGBPalette16 &pal,
+      uint16_t numLeds,
+      uint8_t indexScale,
+      uint8_t minBrightness,
+      uint8_t maxBrightness);
+  void rainbow_beat();
+  void chromoteraphy_beat();
 };
 
 void lightsSetup();
