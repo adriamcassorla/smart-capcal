@@ -4,6 +4,22 @@
 #include <FastLED.h>
 
 /////
+// Utils
+/////
+void fillColourWithBrightness(
+    struct CRGB *ledsArray,
+    uint16_t length,
+    uint8_t brightness,
+    uint8_t hue = WARM_WHITE_HUE,
+    uint8_t saturation = WARM_WHITE_SAT)
+{
+  for (uint16_t i = 0; i < length; ++i)
+  {
+    ledsArray[i] = CHSV(hue, saturation, brightness);
+  }
+}
+
+/////
 // Reading Light Implementation
 /////
 ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse): 
@@ -16,12 +32,9 @@ ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse):
 
 void ReadingLight::toggle() {
   isOn = !isOn;
-  
-  CRGB::HTMLColorCode color = isOn ? CRGB::Goldenrod : CRGB::Black;
-  for (uint16_t i = 0; i < numLeds; ++i)
-  {
-    readingLeds[i] = color;
-  }
+
+  uint8_t newBrightness = isOn ? DEFAULT_BRIGHTNESS : 0;
+  fillColourWithBrightness(readingLeds, numLeds, newBrightness);
   FastLED.show();
 }
 
@@ -53,18 +66,23 @@ AmbientLight::AmbientLight(
 void AmbientLight::toggle() {
   isOn = !isOn;
 
-  CRGB::HTMLColorCode color = isOn ? CRGB::Goldenrod : CRGB::Black;
-  for (uint8_t i = 0; i < numAmbient; ++i) {
-    ambient[i] = color;
-  }
-  for (uint8_t i = 0; i < numTop; ++i) {
-    top[i] = color;
-  }
+  uint8_t newBrightness = isOn ? DEFAULT_BRIGHTNESS : 0;
+  fillColourWithBrightness(ambient, numAmbient, newBrightness);
+  fillColourWithBrightness(top, numTop, newBrightness);
   FastLED.show();
 }
 
 void AmbientLight::setBrightness(uint8_t value) {
-  brightness = value;
+  if (value != brightness)
+  {
+    brightness = value;
+    if (isOn)
+    {
+      fillColourWithBrightness(top, numTop, brightness);
+      fillColourWithBrightness(ambient, numAmbient, brightness);
+      FastLED.show();
+    }
+  }
 }
 
 void AmbientLight::reset() {

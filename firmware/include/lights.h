@@ -9,6 +9,7 @@
 #define VOLTS 5
 #define MAX_AMPS 30000
 #define MAX_BRIGHTNESS 255
+#define DEFAULT_BRIGHTNESS 218
 
 #define NUM_LEDS_AMBIENT 192
 #define NUM_LEDS_READING 144
@@ -21,6 +22,9 @@
 #define CLOCK_PIN_READING 6 // 49 SCK2
 #define DATA_PIN_READING 7 // 50 MOSI2
 
+#define WARM_WHITE_HUE 30
+#define WARM_WHITE_SAT 218
+
 extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
 extern CRGB topLeds[NUM_LEDS_TOP];
@@ -29,6 +33,13 @@ extern class ReadingLight readingLeft;
 extern class ReadingLight readingRight;
 extern class AmbientLight ambientLight;
 extern class DemoLights demoLights;
+
+void fillColourWithBrightness(
+    struct CRGB *ledsArray,
+    uint16_t length,
+    uint8_t brightness,
+    uint8_t hue = WARM_WHITE_HUE,
+    uint8_t saturation = WARM_WHITE_SAT);
 
 class ReadingLight {
 public:
