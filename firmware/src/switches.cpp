@@ -60,7 +60,8 @@ void MultiSwitch::callback(void *callbackData)
   else if (pinId == 2)
   {
     ambientLight.reset();
-    multiSwitch->readingLight->reset();
+    readingRight.reset();
+    readingLeft.reset();
   }
 
   switch (pinId)
