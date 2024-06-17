@@ -23,8 +23,8 @@ void MultiSwitch::setup()
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
   {
     MultiSwitchCallbackData *callbackData = new MultiSwitchCallbackData{this, pinIds[i]};
-    toggleSwitches[i]->setPushedCallback(&callback, (void *)&callbackData);
-    toggleSwitches[i]->setReleasedCallback(&callback, (void *)&callbackData);
+    toggleSwitches[i]->setPushedCallback(&callback, (void *)callbackData);
+    toggleSwitches[i]->setReleasedCallback(&callback, (void *)callbackData);
   }
 }
 
