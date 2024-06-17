@@ -13,6 +13,9 @@
 #define ANIMATION_INTERVAL SECOND / FRAMES_PER_SECOND
 #define POLL_INTERVAL 50
 
+/////////
+// SETUP
+/////////
 void setup() {
   // sanity check delay
   delay(INITIAL_DELAY);
@@ -23,6 +26,9 @@ void setup() {
   potentiometersSetup();
 }
 
+//////////
+// LOOP
+//////////
 void loop() {
   EVERY_N_MILLISECONDS(POLL_INTERVAL)
   {

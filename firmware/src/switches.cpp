@@ -2,24 +2,33 @@
 #include "lights.h"
 #include "avdweb_Switch.h"
 
-Switches::Switches(uint8_t *p, int *id) : pins(p), pinIds(id)
+/////
+// MultiSwitch Implementation
+/////
+MultiSwitch::MultiSwitch(
+    uint8_t *pinNumbers,
+    ReadingLight *light,
+    DemoLights::Mode mode) : readingLight(light),
+                             demoMode(mode)
 {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
   {
-    toggleSwitches[i] = new Switch(p[i]);
+    toggleSwitches[i] = new Switch(pinNumbers[i]);
   }
 }
 
-void Switches::setup()
+int MultiSwitch::pinIds[NUM_SWITCHES] = {0, 1, 2};
+void MultiSwitch::setup()
 {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
   {
-    toggleSwitches[i]->setPushedCallback(&callback, (void *)&pinIds[i]);
-    toggleSwitches[i]->setReleasedCallback(&callback, (void *)&pinIds[i]);
+    MultiSwitchCallbackData *callbackData = new MultiSwitchCallbackData{this, pinIds[i]};
+    toggleSwitches[i]->setPushedCallback(&callback, (void *)callbackData);
+    toggleSwitches[i]->setReleasedCallback(&callback, (void *)callbackData);
   }
 }
 
-void Switches::poll()
+void MultiSwitch::poll()
 {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
   {
@@ -27,41 +36,45 @@ void Switches::poll()
   }
 }
 
-void Switches::callback(void *s)
+void MultiSwitch::callback(void *callbackData)
 {
-  int *switchIndex = (int *)s; // converts s to int pointer (int *)
+  // Cast the callbackData to MultiSwitchCallbackData
+  MultiSwitchCallbackData *data = static_cast<MultiSwitchCallbackData *>(callbackData);
 
-  // Turns off animations and resets all other lights
-  if (demoLights.isOn && (*switchIndex) != 0 && (*switchIndex) != 5)
+  // Access own instance of MultiSwitch and the pinId
+  MultiSwitch *multiSwitch = data->instance;
+  int pinId = data->pinId;
+
+  // Check if multiSwitch is valid before using it
+  if (!multiSwitch)
+  {
+    return;
+  }
+
+  // Stop demo if isOn and another switch has been selected
+  if (demoLights.isOn && pinId != 2)
   {
     demoLights.stop();
   }
-  else if ((*switchIndex) == 0 || (*switchIndex) == 5)
+  // Reset other lights when demo mode is selected
+  else if (pinId == 2)
   {
     ambientLight.reset();
-    readingLeft.reset();
     readingRight.reset();
+    readingLeft.reset();
   }
 
-  switch ((*switchIndex))
+  switch (pinId)
   {
   case 0:
-    demoLights.setMode(DemoLights::Mode::Rainbow);
-    demoLights.toggle();
+    multiSwitch->readingLight->toggle();
     break;
   case 1:
-  case 4:
     ambientLight.toggle();
     break;
-  case 5:
-    demoLights.setMode(DemoLights::Mode::Chromotherapy);
-    demoLights.toggle();
-    break;
   case 2:
-    readingLeft.toggle();
-    break;
-  case 3:
-    readingRight.toggle();
+    demoLights.setMode(multiSwitch->demoMode);
+    demoLights.toggle();
     break;
   default:
     break;
@@ -72,14 +85,15 @@ void Switches::callback(void *s)
 // SETUP
 /////////
 
-// Define the pin numbers for the switches
-uint8_t switchPins[] = {25, 31, 27, 28, 29, 30};
-int switchPinsIds[] = {0, 1, 2, 3, 4, 5};
-Switches switches(switchPins, switchPinsIds);
+uint8_t leftPins[] = {27, 31, 25};
+uint8_t rightPins[] = {28, 29, 30};
+MultiSwitch leftSwitches(leftPins, &readingLeft, DemoLights::Mode::Rainbow);
+MultiSwitch rightSwitches(rightPins, &readingRight, DemoLights::Mode::Chromotherapy);
 
 void switchesSetup()
 {
-  switches.setup();
+  leftSwitches.setup();
+  rightSwitches.setup();
 }
 
 ////////
@@ -87,5 +101,6 @@ void switchesSetup()
 ////////
 void switchesLoop()
 {
-  switches.poll();
+  leftSwitches.poll();
+  rightSwitches.poll();
 }
