@@ -21,7 +21,7 @@ struct MultiSwitchCallbackData
 class MultiSwitch
 {
 public:
-  MultiSwitch(uint8_t *pinNumbers, ReadingLight *light);
+  MultiSwitch(uint8_t *pinNumbers, ReadingLight *light, enum DemoLights::Mode mode);
   void setup();
   void poll();
 
@@ -29,6 +29,7 @@ private:
   static int pinIds[NUM_SWITCHES];
   Switch *toggleSwitches[NUM_SWITCHES];
   ReadingLight *readingLight;
+  enum DemoLights::Mode demoMode;
   static void callback(void *callbackData);
 };
 

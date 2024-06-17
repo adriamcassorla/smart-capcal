@@ -5,8 +5,11 @@
 /////
 // MultiSwitch Implementation
 /////
-MultiSwitch::MultiSwitch(uint8_t *pinNumbers, ReadingLight *light)
-    : readingLight(light)
+MultiSwitch::MultiSwitch(
+    uint8_t *pinNumbers,
+    ReadingLight *light,
+    DemoLights::Mode mode) : readingLight(light),
+                             demoMode(mode)
 {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
   {
@@ -40,7 +43,7 @@ void MultiSwitch::callback(void *callbackData)
 
   // Access own instance of MultiSwitch and the pinId
   MultiSwitch *multiSwitch = data->instance;
-  uint8_t pinId = data->pinId;
+  int pinId = data->pinId;
 
   // Check if multiSwitch is valid before using it
   if (!multiSwitch)
@@ -69,7 +72,7 @@ void MultiSwitch::callback(void *callbackData)
     ambientLight.toggle();
     break;
   case 2:
-    demoLights.setMode(DemoLights::Mode::Rainbow);
+    demoLights.setMode(multiSwitch->demoMode);
     demoLights.toggle();
     break;
   default:
@@ -83,8 +86,8 @@ void MultiSwitch::callback(void *callbackData)
 
 uint8_t leftPins[] = {27, 31, 25};
 uint8_t rightPins[] = {28, 29, 30};
-MultiSwitch leftSwitches(leftPins, &readingLeft);
-MultiSwitch rightSwitches(rightPins, &readingRight);
+MultiSwitch leftSwitches(leftPins, &readingLeft, DemoLights::Mode::Rainbow);
+MultiSwitch rightSwitches(rightPins, &readingRight, DemoLights::Mode::Chromotherapy);
 
 void switchesSetup()
 {
