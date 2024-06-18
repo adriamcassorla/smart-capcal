@@ -5,7 +5,7 @@
 
 #include "lights.h"
 #include "switches.h"
-#include "potentiometers.h"
+#include "knobs.h"
 
 #define SECOND 1000
 #define INITIAL_DELAY 2 * SECOND
@@ -23,7 +23,7 @@ void setup() {
   // Internal parts setup
   lightsSetup();
   switchesSetup();
-  potentiometersSetup();
+  knobsSetup();
 }
 
 //////////
@@ -33,7 +33,7 @@ void loop() {
   EVERY_N_MILLISECONDS(POLL_INTERVAL)
   {
     switchesLoop();
-    potentiometersLoop();
+    knobsLoop();
   }
 
   EVERY_N_MILLISECONDS(ANIMATION_INTERVAL)
