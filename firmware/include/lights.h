@@ -10,7 +10,7 @@
 #define MAX_AMPS 30000
 
 #define MAX_BRIGHTNESS 255
-#define MIN_BRIGHTNESS 50
+#define MIN_BRIGHTNESS 25
 #define DEFAULT_BRIGHTNESS 218
 
 #define NUM_LEDS_AMBIENT 192 // 120 are AMBIENT and 72 are DIORAMA
@@ -53,15 +53,8 @@ struct LightSection
 {
   struct CRGB *ledsArray;
   uint16_t length;
-  SectionConfig config;
+  struct SectionConfig *config;
 };
-
-void fillColourWithBrightness(
-    struct CRGB *ledsArray,
-    uint16_t length,
-    uint8_t brightness,
-    uint8_t hue,
-    uint8_t saturation);
 
 class ReadingLight {
 public:
@@ -81,7 +74,7 @@ public:
 
 class AmbientLight {
 public:
-  AmbientLight(LightSection *lightSections, uint8_t length);
+  AmbientLight(LightSection *lightSections, uint16_t length);
   void toggle();
   void setBrightness(uint8_t value);
   void reset();
@@ -92,12 +85,12 @@ private:
   bool isOn;
   uint8_t brightness;
 
-  void mapNewBrightness(uint8_t newBrightness);
+  void applyNewBrightness();
 };
 
 class DemoLights {
 public:
-  DemoLights(LightSection *lightSections, uint8_t length);
+  DemoLights(LightSection *lightSections, uint16_t length);
   enum Mode
   {
     Rainbow,

@@ -2,22 +2,7 @@
 #include "palettes.h"
 #include <Arduino.h>
 #include <FastLED.h>
-
-/////
-// Utils
-/////
-void fillColourWithBrightness(
-    struct CRGB *ledsArray,
-    uint16_t length,
-    uint8_t brightness,
-    uint8_t hue = WARM_WHITE_HUE,
-    uint8_t saturation = WARM_WHITE_SAT)
-{
-  for (uint16_t i = 0; i < length; ++i)
-  {
-    ledsArray[i] = CHSV(hue, saturation, brightness);
-  }
-}
+#include <algorithm>
 
 /////
 // Reading Light Implementation
@@ -33,8 +18,11 @@ ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse)
 
 void ReadingLight::toggle() {
   isOn = !isOn;
+
   brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  fillColourWithBrightness(readingLeds, numLeds, brightness);
+  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
+  fill_solid(readingLeds, numLeds, color);
+
   FastLED.show();
 }
 
@@ -50,7 +38,7 @@ void ReadingLight::reset() {
 /////
 // Ambient Light Implementation
 /////
-AmbientLight::AmbientLight(LightSection *sections, uint8_t length)
+AmbientLight::AmbientLight(LightSection *sections, uint16_t length)
     : lightSections(sections),
       numSections(length),
       isOn(false),
@@ -60,10 +48,13 @@ AmbientLight::AmbientLight(LightSection *sections, uint8_t length)
 
 void AmbientLight::toggle() {
   isOn = !isOn;
+
   brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  // fillColourWithBrightness(ambientLeft, numAmbient, brightness);
-  // fillColourWithBrightness(top, numTop, brightness);
+  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
+  fill_solid(lightSections[2].ledsArray, lightSections[2].length, color);
+
   FastLED.show();
+  // applyNewBrightness();
 }
 
 void AmbientLight::setBrightness(uint8_t value) {
@@ -72,13 +63,32 @@ void AmbientLight::setBrightness(uint8_t value) {
     brightness = value;
     if (isOn)
     {
-      mapNewBrightness(brightness);
+      // applyNewBrightness();
     }
   }
 }
 
-void AmbientLight::mapNewBrightness(uint8_t newBrightness)
+void AmbientLight::applyNewBrightness()
 {
+  for (uint8_t n = 0; n < numSections; n++)
+  {
+    if (brightness >= lightSections[n].config->lowerBound)
+    {
+      uint8_t sectionBrightness = map(
+          brightness,
+          lightSections[n].config->lowerBound,
+          MAX_BRIGHTNESS,
+          MIN_BRIGHTNESS,
+          lightSections[n].config->maxBrightness);
+
+      CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, sectionBrightness);
+      fill_solid(lightSections[n].ledsArray, lightSections[n].length, color);
+    }
+    else
+    {
+      fill_solid(lightSections[n].ledsArray, lightSections[n].length, CRGB::Black);
+    }
+  }
   FastLED.show();
 }
 
@@ -90,7 +100,7 @@ void AmbientLight::reset() {
 /////
 // Demo Lights Implementation
 /////
-DemoLights::DemoLights(LightSection *sections, uint8_t length)
+DemoLights::DemoLights(LightSection *sections, uint16_t length)
     : isOn(false),
       lightSections(sections),
       numSections(length),
@@ -139,19 +149,19 @@ void DemoLights::loop() {
 void DemoLights::rainbow_beat() {
   uint8_t beatA = beatsin8(9, 0, brightness);
   uint8_t beatB = beatsin8(13, 0, brightness);
-  for (uint8_t n = 0; n < NUM_SECTIONS; n++)
+  for (uint8_t n = 0; n < numSections; n++)
   {
     fill_rainbow(
         lightSections[n].ledsArray,
         lightSections[n].length,
         (beatA + beatB) / 2,
-        lightSections[n].config.maxBrightness / lightSections[n].length);
+        lightSections[n].config->maxBrightness / lightSections[n].length);
   }
 }
 
 void DemoLights::chromoteraphy_beat()
 {
-  for (uint8_t n = 0; n < NUM_SECTIONS; n++)
+  for (uint8_t n = 0; n < numSections; n++)
   {
     applyRandomPalette(
         lightSections[n].ledsArray,
@@ -159,7 +169,7 @@ void DemoLights::chromoteraphy_beat()
         lightSections[n].length,
         100,
         brightness * 0.2,
-        lightSections[n].config.maxBrightness);
+        std::min(lightSections[n].config->maxBrightness, brightness));
   }
 }
 
@@ -171,14 +181,15 @@ void DemoLights::applyRandomPalette(
       uint8_t minBrightness, 
       uint8_t maxBrightness
     ) {
-    for (int i = 0; i < numLeds; i++) {
-    uint8_t brightness = inoise8(i, millis() / 30);
+  for (u_int16_t i = 0; i < numLeds; i++)
+  {
+    uint8_t b = inoise8(i, millis() / 30);
     uint16_t index = inoise16(i * indexScale, millis() / 20);
 
     targetArray[i] = ColorFromPalette(
-      pal,
-      constrain(index, 0, numLeds - 1),
-      constrain(brightness, minBrightness, maxBrightness));
+        pal,
+        constrain(index, 0, numLeds - 1),
+        constrain(b, minBrightness, maxBrightness));
   }
 }
 
@@ -205,42 +216,41 @@ SectionConfig topConfig = {
   maxBrightness : MAX_BRIGHTNESS
 };
 SectionConfig dioramaConfig = {
-  lowerBound : MAX_BRIGHTNESS / 2,
+  lowerBound : 127,
   upperBound : MAX_BRIGHTNESS,
-  maxBrightness : MAX_BRIGHTNESS / 2,
+  maxBrightness : 127,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
   upperBound : MAX_BRIGHTNESS,
-  maxBrightness : MAX_BRIGHTNESS / 2,
+  maxBrightness : 127,
 };
 
 // Sections initialisation
 LightSection ambientLeft = {
-  ledsArray : ambientLeds + LEFT_AMBIENT_FIRST_LED,
-  length : NUM_LEDS_SIDE_AMBIENT - 1, // Problems with soldering...
-  config : ambientConfig
-};
+    .ledsArray = ambientLeds + LEFT_AMBIENT_FIRST_LED,
+    .length = NUM_LEDS_SIDE_AMBIENT - 1,
+    .config = &ambientConfig};
+
 LightSection ambientRight = {
-  ledsArray : ambientLeds,
-  length : NUM_LEDS_SIDE_AMBIENT,
-  config : ambientConfig
-};
+    .ledsArray = ambientLeds,
+    .length = NUM_LEDS_SIDE_AMBIENT,
+    .config = &ambientConfig};
+
 LightSection top = {
-  ledsArray : topLeds,
-  length : NUM_LEDS_TOP,
-  config : topConfig
-};
+    .ledsArray = topLeds,
+    .length = NUM_LEDS_TOP,
+    .config = &topConfig};
+
 LightSection diorama = {
-  ledsArray : ambientLeds + DIORAMA_FIRST_LED,
-  length : NUM_LEDS_DIORAMA,
-  config : dioramaConfig
-};
+    .ledsArray = ambientLeds + DIORAMA_FIRST_LED,
+    .length = NUM_LEDS_DIORAMA,
+    .config = &dioramaConfig};
+
 LightSection reading = {
-  ledsArray : readingLeds,
-  length : NUM_LEDS_READING,
-  config : readingConfig
-};
+    .ledsArray = readingLeds,
+    .length = NUM_LEDS_READING * 2,
+    .config = &readingConfig};
 
 // Assignation to the main sections array
 LightSection lightSections[NUM_SECTIONS] = {ambientLeft, ambientRight, top, diorama, reading};
