@@ -10,12 +10,12 @@
 #define MAX_AMPS 30000
 
 #define MAX_BRIGHTNESS 255
-#define MIN_BRIGHTNESS 25
+#define MIN_BRIGHTNESS 50
 #define DEFAULT_BRIGHTNESS 218
 #define DEFAULT_BLUR_FACTOR 170
-#define DEFAULT_BLUR_AMOUNT 3
+#define DEFAULT_BLUR_AMOUNT 5
 #define WARM_WHITE_HUE 30
-#define WARM_WHITE_SAT 215
+#define WARM_WHITE_SAT 200
 
 #define NUM_LEDS_AMBIENT 192 // 120 are AMBIENT and 72 are DIORAMA
 #define NUM_LEDS_READING 144
@@ -49,7 +49,7 @@ extern class DemoLights demoLights;
 struct SectionConfig {
   uint8_t lowerBound = MIN_BRIGHTNESS;
   uint8_t upperBound = MAX_BRIGHTNESS;
-  uint8_t minBrightness = DEFAULT_BRIGHTNESS;
+  uint8_t minBrightness = MIN_BRIGHTNESS;
   uint8_t maxBrightness = MAX_BRIGHTNESS;
   uint16_t firstLedOffset = 0; // Previous leds will be on from the start
   uint16_t lastLedOffset = 0;  // Substracted from the total length

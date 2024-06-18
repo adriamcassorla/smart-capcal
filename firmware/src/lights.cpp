@@ -47,7 +47,7 @@ void AmbientLight::toggle() {
 void AmbientLight::setBrightness(uint8_t value) {
 
   // Prevents big jumps when using multiple knobs / toggles
-  if (value != brightness) {
+  if (value != brightness && abs8(value - brightness) > 2) {
     brightness = value;
     applyNewBrightness();
   }
@@ -62,7 +62,7 @@ void AmbientLight::applyNewBrightness() {
       // When brightness is lower than the upperBound, maps the section
       // brightness betweeen min and max values set in the config
       uint8_t sectionBrightness =
-          brightness > lightSections[n].config->upperBound
+          brightness >= lightSections[n].config->upperBound
               ? lightSections[n].config->maxBrightness
               : map(brightness, lightSections[n].config->lowerBound,
                     lightSections[n].config->upperBound,
@@ -72,11 +72,12 @@ void AmbientLight::applyNewBrightness() {
       // Max length of the section is given by the total length minus the offset
       uint8_t maxLength =
           lightSections[n].length - lightSections[n].config->lastLedOffset;
-
       // When brightness is lower than the upperBound, maps the section
       // length betweeen first led offset and max length
+      bool skipLengthMapping = lightSections[n].config->firstLedOffset == 0 &&
+                               lightSections[n].config->lastLedOffset == 0;
       uint8_t sectionLength =
-          brightness > lightSections[n].config->upperBound
+          skipLengthMapping || brightness >= lightSections[n].config->upperBound
               ? maxLength
               : map(brightness, lightSections[n].config->lowerBound,
                     lightSections[n].config->upperBound,
@@ -91,12 +92,12 @@ void AmbientLight::applyNewBrightness() {
       fill_solid(lightSections[n].ledsArray + pOffset, sectionLength, color);
 
       // Finally blurs the whole array to create a smoother transition
-      // for (uint8_t i = 0; i < lightSections[n].config->blurAmount; i++) {
-      //   blur1d(
-      //       lightSections[n].ledsArray, lightSections[n].length,
-      //       lightSections[n].config->blurFactor
-      //   );
-      // }
+      for (uint8_t i = 0; i < lightSections[n].config->blurAmount; i++) {
+        blur1d(
+            lightSections[n].ledsArray, lightSections[n].length,
+            lightSections[n].config->blurFactor
+        );
+      }
     }
   }
 
@@ -205,17 +206,20 @@ SectionConfig ambientConfig = {
 };
 SectionConfig topConfig = {
   lowerBound : 100,
-  firstLedOffset : 5 // Starts from the center but not from a point
+  minBrightness : 80,
+  firstLedOffset : 5, // Starts from the center but not from a point
 };
 SectionConfig dioramaConfig = {
   lowerBound : 127,
   upperBound : 215,
   maxBrightness : 80,
+  blurAmount : 0,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
-  maxBrightness : 127,
-  lastLedOffset : NUM_LEDS_READING - 18 // Only fills sides
+  maxBrightness : 200,
+  lastLedOffset : 100,
+  blurAmount : 10,
 };
 
 // Sections initialisation
