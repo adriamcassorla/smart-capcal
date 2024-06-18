@@ -19,9 +19,10 @@
 
 #define NUM_LEDS_DIORAMA 72 // Initialised as part of AMBIENT
 #define NUM_LEDS_SIDE_AMBIENT 60
+#define NUM_LEDS_HALF_TOP 60
 #define DIORAMA_FIRST_LED 60
 #define LEFT_AMBIENT_FIRST_LED 142
-#define NUM_SECTIONS 5
+#define NUM_SECTIONS 7
 
 #define CLOCK_PIN_AMBIENT 0 // 13 SCK
 #define DATA_PIN_AMBIENT 1  // 11 MOSI
@@ -43,15 +44,19 @@ extern class AmbientLight ambientLight;
 extern class DemoLights demoLights;
 
 struct SectionConfig {
-  uint8_t lowerBound;
-  uint8_t upperBound;
-  uint8_t maxBrightness;
+  uint8_t lowerBound = MIN_BRIGHTNESS;
+  uint8_t upperBound = MAX_BRIGHTNESS;
+  uint8_t minBrightness = DEFAULT_BRIGHTNESS;
+  uint8_t maxBrightness = MAX_BRIGHTNESS;
+  uint16_t firstLedOffset = 0; // Previous leds will be from the start
+  uint16_t lastLedOffset = 0;  // Substracted from the total length
 };
 
 struct LightSection {
   struct CRGB *ledsArray;
   uint16_t length;
   struct SectionConfig *config;
+  bool reverse = false; // Used to mirror the effects
 };
 
 class ReadingLight {

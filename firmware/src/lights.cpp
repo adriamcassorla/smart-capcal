@@ -1,8 +1,10 @@
-#include "lights.h"
-#include "palettes.h"
 #include <Arduino.h>
 #include <FastLED.h>
 #include <algorithm>
+#include <cmath>
+
+#include "lights.h"
+#include "palettes.h"
 
 /////
 // Reading Light Implementation
@@ -40,7 +42,7 @@ void AmbientLight::toggle() {
 
   brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
   CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
-  fill_solid(lightSections[2].ledsArray, lightSections[2].length, color);
+  fill_solid(lightSections[0].ledsArray, lightSections[0].length, color);
 
   FastLED.show();
   // applyNewBrightness();
@@ -163,37 +165,37 @@ CRGB ambientLeds[NUM_LEDS_AMBIENT];
 CRGB readingLeds[NUM_LEDS_READING * 2];
 CRGB topLeds[NUM_LEDS_TOP];
 
+// These instances are only used for spot lights
 ReadingLight
     readingLeft(readingLeds + NUM_LEDS_READING, NUM_LEDS_READING, true);
 ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
 
-// Section configurations
+// Section configurations for ambient and demo modes
 SectionConfig ambientConfig = {
-  lowerBound : 30,
-  upperBound : MAX_BRIGHTNESS,
-  maxBrightness : MAX_BRIGHTNESS,
+  upperBound : 200,
+  firstLedOffset : 30 // Starts with full floor lights on
 };
 SectionConfig topConfig = {
   lowerBound : 100,
-  upperBound : MAX_BRIGHTNESS,
-  maxBrightness : MAX_BRIGHTNESS
+  firstLedOffset : 5 // Starts from the center but not from a point
 };
 SectionConfig dioramaConfig = {
   lowerBound : 127,
-  upperBound : MAX_BRIGHTNESS,
-  maxBrightness : 127,
+  upperBound : 215,
+  maxBrightness : 100,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
-  upperBound : MAX_BRIGHTNESS,
   maxBrightness : 127,
+  lastLedOffset : 20 // Only fills sides
 };
 
 // Sections initialisation
 LightSection ambientLeft = {
     .ledsArray = ambientLeds + LEFT_AMBIENT_FIRST_LED,
-    .length = NUM_LEDS_SIDE_AMBIENT - 1,
-    .config = &ambientConfig
+    .length = NUM_LEDS_SIDE_AMBIENT - 1, // Bad soldering -> one led missing
+    .config = &ambientConfig,
+    .reverse = true
 };
 
 LightSection ambientRight = {
@@ -202,8 +204,17 @@ LightSection ambientRight = {
     .config = &ambientConfig
 };
 
-LightSection top = {
-    .ledsArray = topLeds, .length = NUM_LEDS_TOP, .config = &topConfig
+LightSection topLeft = {
+    .ledsArray = topLeds + NUM_LEDS_HALF_TOP,
+    .length = NUM_LEDS_HALF_TOP,
+    .config = &topConfig,
+};
+
+LightSection topRight = {
+    .ledsArray = topLeds,
+    .length = NUM_LEDS_HALF_TOP + 1, // Total number is odd
+    .config = &topConfig,
+    .reverse = true
 };
 
 LightSection diorama = {
@@ -212,15 +223,23 @@ LightSection diorama = {
     .config = &dioramaConfig
 };
 
-LightSection reading = {
+LightSection readingSectionLeft = {
+    .ledsArray = readingLeds + NUM_LEDS_READING,
+    .length = NUM_LEDS_READING,
+    .config = &readingConfig,
+    .reverse = true
+};
+
+LightSection readingSectionRight = {
     .ledsArray = readingLeds,
-    .length = NUM_LEDS_READING * 2,
+    .length = NUM_LEDS_READING,
     .config = &readingConfig
 };
 
 // Assignation to the main sections array
 LightSection lightSections[NUM_SECTIONS] = {
-    ambientLeft, ambientRight, top, diorama, reading
+    ambientLeft,        ambientRight,       topLeft, topRight, diorama,
+    readingSectionLeft, readingSectionRight
 };
 
 AmbientLight ambientLight(lightSections, NUM_SECTIONS);
