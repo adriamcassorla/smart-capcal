@@ -8,8 +8,7 @@
 
 #define NUM_KNOBS 2
 
-class Knobs
-{
+class Knobs {
 public:
   Knobs();
   //   void setup();

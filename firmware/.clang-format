@@ -1,0 +1,8 @@
+ColumnLimit: 80
+BreakBeforeBraces: Attach
+IndentWidth: 2
+MaxEmptyLinesToKeep: 1
+OverEmptyLines: 2
+AlignAfterOpenBracket: BlockIndent
+AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse

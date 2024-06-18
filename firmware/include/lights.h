@@ -24,11 +24,11 @@
 #define NUM_SECTIONS 5
 
 #define CLOCK_PIN_AMBIENT 0 // 13 SCK
-#define DATA_PIN_AMBIENT 1 // 11 MOSI
-#define CLOCK_PIN_TOP  10// 27 SCK1
-#define DATA_PIN_TOP 11 // 26 MOSI1
+#define DATA_PIN_AMBIENT 1  // 11 MOSI
+#define CLOCK_PIN_TOP 10    // 27 SCK1
+#define DATA_PIN_TOP 11     // 26 MOSI1
 #define CLOCK_PIN_READING 6 // 49 SCK2
-#define DATA_PIN_READING 7 // 50 MOSI2
+#define DATA_PIN_READING 7  // 50 MOSI2
 
 #define WARM_WHITE_HUE 30
 #define WARM_WHITE_SAT 215
@@ -42,15 +42,13 @@ extern class ReadingLight readingRight;
 extern class AmbientLight ambientLight;
 extern class DemoLights demoLights;
 
-struct SectionConfig
-{
+struct SectionConfig {
   uint8_t lowerBound;
   uint8_t upperBound;
   uint8_t maxBrightness;
 };
 
-struct LightSection
-{
+struct LightSection {
   struct CRGB *ledsArray;
   uint16_t length;
   struct SectionConfig *config;
@@ -58,18 +56,18 @@ struct LightSection
 
 class ReadingLight {
 public:
-    ReadingLight(struct CRGB *array, uint8_t length, bool reverse);  
-    void toggle();
-    void setBrightness(uint8_t value);
-    void reset();
+  ReadingLight(struct CRGB *array, uint8_t length, bool reverse);
+  void toggle();
+  void setBrightness(uint8_t value);
+  void reset();
 
-  private:
-    struct CRGB *readingLeds;
-    uint8_t numLeds;
+private:
+  struct CRGB *readingLeds;
+  uint8_t numLeds;
 
-    bool isOn;
-    uint8_t brightness;
-    bool isReversed;
+  bool isOn;
+  uint8_t brightness;
+  bool isReversed;
 };
 
 class AmbientLight {
@@ -91,11 +89,11 @@ private:
 class DemoLights {
 public:
   DemoLights(LightSection *lightSections, uint16_t length);
-  enum Mode
-  {
+  enum Mode {
     Rainbow,
     Chromotherapy,
   };
+
   void toggle();
   void setBrightness(uint8_t value);
   void setMode(Mode mode);
@@ -111,12 +109,9 @@ private:
   Mode activeMode;
 
   void applyRandomPalette(
-      struct CRGB *targetArray,
-      CRGBPalette16 &pal,
-      uint16_t numLeds,
-      uint8_t indexScale,
-      uint8_t minBrightness,
-      uint8_t maxBrightness);
+      struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
+      uint8_t indexScale, uint8_t minBrightness, uint8_t maxBrightness
+  );
   void rainbow_beat();
   void chromoteraphy_beat();
 };
