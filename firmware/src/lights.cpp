@@ -53,10 +53,9 @@ void AmbientLight::setBrightness(uint8_t value) {
   if (value != brightness &&
       abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
 
+    isOn = value > MIN_BRIGHTNESS;
     brightness = value;
-    if (isOn) {
-      // applyNewBrightness();
-    }
+    // applyNewBrightness();
   }
 }
 
