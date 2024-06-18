@@ -3,9 +3,9 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
+#include "knobs.h"
 #include "lights.h"
 #include "switches.h"
-#include "potentiometers.h"
 
 #define SECOND 1000
 #define INITIAL_DELAY 2 * SECOND
@@ -23,22 +23,17 @@ void setup() {
   // Internal parts setup
   lightsSetup();
   switchesSetup();
-  potentiometersSetup();
+  knobsSetup();
 }
 
 //////////
 // LOOP
 //////////
 void loop() {
-  EVERY_N_MILLISECONDS(POLL_INTERVAL)
-  {
+  EVERY_N_MILLISECONDS(POLL_INTERVAL) {
     switchesLoop();
-    potentiometersLoop();
+    knobsLoop();
   }
 
-  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL)
-  {
-    lightsLoop();
-  }
+  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) { lightsLoop(); }
 }
-

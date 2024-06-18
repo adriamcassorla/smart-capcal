@@ -6,9 +6,9 @@
 
 class Sensors {
 public:
-    Sensors();  
+  Sensors();
+
 private:
-    
 };
 
 #endif // SENSORS_H

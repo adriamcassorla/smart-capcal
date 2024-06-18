@@ -1,6 +1,4 @@
 #include "sensors.h"
 #include <Arduino.h>
 
-Sensors::Sensors() {
-    
-}
+Sensors::Sensors() {}
