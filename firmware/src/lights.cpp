@@ -40,22 +40,16 @@ AmbientLight::AmbientLight(LightSection *sections, uint16_t length)
 void AmbientLight::toggle() {
   isOn = !isOn;
 
-  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
-  fill_solid(lightSections[0].ledsArray, lightSections[0].length, color);
-
-  FastLED.show();
-  // applyNewBrightness();
+  brightness = isOn ? MAX_BRIGHTNESS : 0;
+  applyNewBrightness();
 }
 
 void AmbientLight::setBrightness(uint8_t value) {
-  // Prevents big jumps when using multiple knobs / toggles
-  if (value != brightness &&
-      abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
 
-    isOn = value > MIN_BRIGHTNESS;
+  // Prevents big jumps when using multiple knobs / toggles
+  if (value != brightness) {
     brightness = value;
-    // applyNewBrightness();
+    applyNewBrightness();
   }
 }
 
@@ -75,7 +69,7 @@ void AmbientLight::applyNewBrightness() {
                     lightSections[n].config->minBrightness,
                     lightSections[n].config->maxBrightness);
 
-      // Max length of the section is given by the total length - the offset
+      // Max length of the section is given by the total length minus the offset
       uint8_t maxLength =
           lightSections[n].length - lightSections[n].config->lastLedOffset;
 
@@ -88,9 +82,13 @@ void AmbientLight::applyNewBrightness() {
                     lightSections[n].config->upperBound,
                     lightSections[n].config->firstLedOffset, maxLength);
 
+      // When the section is mirrorred, adds an offset to the array pointer
+      uint16_t pOffset =
+          lightSections[n].mirror ? lightSections[n].length - sectionLength : 0;
+
       // Creates a color with the resulting brightness and fills the section
       CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, sectionBrightness);
-      fill_solid(lightSections[n].ledsArray, sectionLength, color);
+      fill_solid(lightSections[n].ledsArray + pOffset, sectionLength, color);
 
       // Finally blurs the whole array to create a smoother transition
       // for (uint8_t i = 0; i < lightSections[n].config->blurAmount; i++) {
@@ -212,12 +210,12 @@ SectionConfig topConfig = {
 SectionConfig dioramaConfig = {
   lowerBound : 127,
   upperBound : 215,
-  maxBrightness : 100,
+  maxBrightness : 80,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
   maxBrightness : 127,
-  lastLedOffset : 20 // Only fills sides
+  lastLedOffset : NUM_LEDS_READING - 18 // Only fills sides
 };
 
 // Sections initialisation
@@ -242,7 +240,7 @@ LightSection topLeft = {
 
 LightSection topRight = {
     .ledsArray = topLeds,
-    .length = NUM_LEDS_HALF_TOP + 1, // Total number is odd
+    .length = NUM_LEDS_HALF_TOP,
     .config = &topConfig,
     .mirror = true
 };

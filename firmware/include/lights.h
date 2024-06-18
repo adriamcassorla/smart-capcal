@@ -22,11 +22,11 @@
 #define NUM_LEDS_TOP 107
 
 #define NUM_SECTIONS 7
-#define NUM_LEDS_DIORAMA 72 // Initialised as part of AMBIENT
-#define DIORAMA_FIRST_LED 60
 #define NUM_LEDS_SIDE_AMBIENT 60
-#define NUM_LEDS_HALF_TOP 53
-#define LEFT_AMBIENT_FIRST_LED 142
+#define NUM_LEDS_DIORAMA 73 // Initialised as part of AMBIENT
+#define DIORAMA_FIRST_LED NUM_LEDS_SIDE_AMBIENT
+#define LEFT_AMBIENT_FIRST_LED NUM_LEDS_SIDE_AMBIENT + NUM_LEDS_DIORAMA
+#define NUM_LEDS_HALF_TOP 54
 
 #define CLOCK_PIN_AMBIENT 0 // 13 SCK
 #define DATA_PIN_AMBIENT 1  // 11 MOSI
@@ -51,7 +51,7 @@ struct SectionConfig {
   uint8_t upperBound = MAX_BRIGHTNESS;
   uint8_t minBrightness = DEFAULT_BRIGHTNESS;
   uint8_t maxBrightness = MAX_BRIGHTNESS;
-  uint16_t firstLedOffset = 0; // Previous leds will be from the start
+  uint16_t firstLedOffset = 0; // Previous leds will be on from the start
   uint16_t lastLedOffset = 0;  // Substracted from the total length
   uint8_t blurFactor = DEFAULT_BLUR_FACTOR;
   uint8_t blurAmount = DEFAULT_BLUR_AMOUNT;
@@ -61,7 +61,7 @@ struct LightSection {
   struct CRGB *ledsArray;
   uint16_t length;
   struct SectionConfig *config;
-  bool mirror = false; // Used to mirror the effects
+  bool mirror = false;
 };
 
 class ReadingLight {
