@@ -49,7 +49,9 @@ void AmbientLight::setBrightness(uint8_t value) {
       abs8(value - brightness) > MIN_BRIGHTNESS_DIFFERENCE) {
 
     brightness = value;
-    isOn = brightness > MIN_BRIGHTNESS;
+
+    // TODO: Only do it when actively moving
+    //  isOn = brightness > MIN_BRIGHTNESS;
 
     applyNewBrightness();
   }
