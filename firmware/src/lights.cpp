@@ -49,7 +49,10 @@ void AmbientLight::toggle() {
 }
 
 void AmbientLight::setBrightness(uint8_t value) {
-  if (value != brightness) {
+  // Prevents big jumps when using multiple knobs / toggles
+  if (value != brightness &&
+      abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
+
     brightness = value;
     if (isOn) {
       // applyNewBrightness();
@@ -58,20 +61,48 @@ void AmbientLight::setBrightness(uint8_t value) {
 }
 
 void AmbientLight::applyNewBrightness() {
+  FastLED.clear();
+
   for (uint8_t n = 0; n < numSections; n++) {
     if (brightness >= lightSections[n].config->lowerBound) {
-      uint8_t sectionBrightness =
-          map(brightness, lightSections[n].config->lowerBound, MAX_BRIGHTNESS,
-              MIN_BRIGHTNESS, lightSections[n].config->maxBrightness);
 
+      // When brightness is lower than the upperBound, maps the section
+      // brightness betweeen min and max values set in the config
+      uint8_t sectionBrightness =
+          brightness > lightSections[n].config->upperBound
+              ? lightSections[n].config->maxBrightness
+              : map(brightness, lightSections[n].config->lowerBound,
+                    lightSections[n].config->upperBound,
+                    lightSections[n].config->minBrightness,
+                    lightSections[n].config->maxBrightness);
+
+      // Max length of the section is given by the total length - the offset
+      uint8_t maxLength =
+          lightSections[n].length - lightSections[n].config->lastLedOffset;
+
+      // When brightness is lower than the upperBound, maps the section
+      // length betweeen first led offset and max length
+      uint8_t sectionLength =
+          brightness > lightSections[n].config->upperBound
+              ? maxLength
+              : map(brightness, lightSections[n].config->lowerBound,
+                    lightSections[n].config->upperBound,
+                    lightSections[n].config->firstLedOffset, maxLength);
+
+      // Creates a color with the resulting brightness and fills the section
       CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, sectionBrightness);
-      fill_solid(lightSections[n].ledsArray, lightSections[n].length, color);
-    } else {
-      fill_solid(
-          lightSections[n].ledsArray, lightSections[n].length, CRGB::Black
-      );
+      fill_solid(lightSections[n].ledsArray, sectionLength, color);
+
+      // Finally blurs the whole array to create a smoother transition
+      // for (uint8_t i = 0; i < lightSections[n].config->blurAmount; i++) {
+      //   blur1d(
+      //       lightSections[n].ledsArray, lightSections[n].length,
+      //       lightSections[n].config->blurFactor
+      //   );
+      // }
     }
   }
+
   FastLED.show();
 }
 
@@ -195,7 +226,7 @@ LightSection ambientLeft = {
     .ledsArray = ambientLeds + LEFT_AMBIENT_FIRST_LED,
     .length = NUM_LEDS_SIDE_AMBIENT - 1, // Bad soldering -> one led missing
     .config = &ambientConfig,
-    .reverse = true
+    .mirror = true
 };
 
 LightSection ambientRight = {
@@ -214,7 +245,7 @@ LightSection topRight = {
     .ledsArray = topLeds,
     .length = NUM_LEDS_HALF_TOP + 1, // Total number is odd
     .config = &topConfig,
-    .reverse = true
+    .mirror = true
 };
 
 LightSection diorama = {
@@ -227,7 +258,7 @@ LightSection readingSectionLeft = {
     .ledsArray = readingLeds + NUM_LEDS_READING,
     .length = NUM_LEDS_READING,
     .config = &readingConfig,
-    .reverse = true
+    .mirror = true
 };
 
 LightSection readingSectionRight = {
