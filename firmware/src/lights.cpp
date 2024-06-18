@@ -45,10 +45,12 @@ void AmbientLight::toggle() {
 }
 
 void AmbientLight::setBrightness(uint8_t value) {
+  if (value != brightness &&
+      abs8(value - brightness) > MIN_BRIGHTNESS_DIFFERENCE) {
 
-  // Prevents big jumps when using multiple knobs / toggles
-  if (value != brightness && abs8(value - brightness) > 2) {
     brightness = value;
+    isOn = brightness > MIN_BRIGHTNESS;
+
     applyNewBrightness();
   }
 }
