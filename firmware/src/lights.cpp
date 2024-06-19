@@ -17,12 +17,10 @@ void ReadingLight::toggle() {
   isOn = !isOn;
   brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
   applyNewBrightness();
+  FastLED.show();
 }
 
-void ReadingLight::setBrightness(uint8_t value) {
-  brightness = value;
-  applyNewBrightness();
-}
+void ReadingLight::refresh() { applyNewBrightness(); }
 
 void ReadingLight::reset() {
   isOn = false;
@@ -31,10 +29,14 @@ void ReadingLight::reset() {
 
 bool ReadingLight::getIsOn() { return isOn; }
 
+void ReadingLight::setBrightness(uint8_t value) {
+  brightness = value;
+  applyNewBrightness();
+}
+
 void ReadingLight::applyNewBrightness() {
   CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
   fill_solid(readingLeds, numLeds, color);
-  FastLED.show();
 }
 
 /////
@@ -50,6 +52,15 @@ void AmbientLight::toggle() {
   brightness = isOn ? MAX_BRIGHTNESS : 0;
   applyNewBrightness();
 }
+
+void AmbientLight::refresh() { applyNewBrightness(); }
+
+void AmbientLight::reset() {
+  isOn = false;
+  brightness = MAX_BRIGHTNESS;
+}
+
+bool AmbientLight::getIsOn() { return isOn; }
 
 void AmbientLight::setBrightness(uint8_t value) {
   if (value != brightness &&
@@ -117,13 +128,6 @@ void AmbientLight::applyNewBrightness() {
   FastLED.show();
 }
 
-void AmbientLight::reset() {
-  isOn = false;
-  brightness = MAX_BRIGHTNESS;
-}
-
-bool AmbientLight::getIsOn() { return isOn; }
-
 /////
 // Demo Lights Implementation
 /////
@@ -137,15 +141,17 @@ void DemoLights::toggle() {
   FastLED.show();
 }
 
-void DemoLights::setBrightness(uint8_t value) { brightness = value; }
-
-void DemoLights::setMode(Mode mode) { activeMode = mode; }
-
 void DemoLights::stop() {
   isOn = false;
   FastLED.clear();
   FastLED.show();
 }
+
+bool DemoLights::getIsOn() { return isOn; }
+
+void DemoLights::setBrightness(uint8_t value) { brightness = value; }
+
+void DemoLights::setMode(Mode mode) { activeMode = mode; }
 
 void DemoLights::loop() {
   if (isOn) {
@@ -161,6 +167,21 @@ void DemoLights::loop() {
     default:
       break;
     }
+  }
+}
+
+void DemoLights::applyRandomPalette(
+    struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
+    uint8_t indexScale, uint8_t minBrightness, uint8_t maxBrightness
+) {
+  for (u_int16_t i = 0; i < numLeds; i++) {
+    uint8_t b = inoise8(i, millis() / 30);
+    uint16_t index = inoise16(i * indexScale, millis() / 20);
+
+    targetArray[i] = ColorFromPalette(
+        pal, constrain(index, 0, numLeds - 1),
+        constrain(b, minBrightness, maxBrightness)
+    );
   }
 }
 
@@ -185,23 +206,6 @@ void DemoLights::chromoteraphy_beat() {
     );
   }
 }
-
-void DemoLights::applyRandomPalette(
-    struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
-    uint8_t indexScale, uint8_t minBrightness, uint8_t maxBrightness
-) {
-  for (u_int16_t i = 0; i < numLeds; i++) {
-    uint8_t b = inoise8(i, millis() / 30);
-    uint16_t index = inoise16(i * indexScale, millis() / 20);
-
-    targetArray[i] = ColorFromPalette(
-        pal, constrain(index, 0, numLeds - 1),
-        constrain(b, minBrightness, maxBrightness)
-    );
-  }
-}
-
-bool DemoLights::getIsOn() { return isOn; }
 
 /////////
 // SETUP

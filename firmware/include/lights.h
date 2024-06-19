@@ -67,9 +67,10 @@ class ReadingLight {
 public:
   ReadingLight(struct CRGB *array, uint8_t length, bool reverse);
   void toggle();
-  void setBrightness(uint8_t value);
+  void refresh();
   void reset();
   bool getIsOn();
+  void setBrightness(uint8_t value);
 
 private:
   struct CRGB *readingLeds;
@@ -86,9 +87,10 @@ class AmbientLight {
 public:
   AmbientLight(LightSection *lightSections, uint16_t length);
   void toggle();
-  void setBrightness(uint8_t value);
+  void refresh();
   void reset();
   bool getIsOn();
+  void setBrightness(uint8_t value);
 
 private:
   struct LightSection *lightSections;
@@ -108,11 +110,11 @@ public:
   };
 
   void toggle();
+  void stop();
+  bool getIsOn();
   void setBrightness(uint8_t value);
   void setMode(Mode mode);
-  void stop();
   void loop();
-  bool getIsOn();
 
 private:
   struct LightSection *lightSections;
