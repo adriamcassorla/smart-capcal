@@ -31,7 +31,7 @@ uint16_t Knob::getValue() { return value; }
 MultiKnob::MultiKnob(uint8_t *pinNumbers, ReadingLight *light)
     : readingLight(light) {
   for (uint8_t i = 0; i < NUM_KNOBS; ++i) {
-    knobs[i] = new Knob(pinNumbers[i]);
+    knobs[i] = new Knob(pinNumbers[i], KNOB_RESOLUTION);
     lastInteraction[i] = 0;
   }
 }
@@ -61,15 +61,17 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
 
   int pinId = data->pinId;
   bool isReadingInUse = multiKnob->readingLight->getIsOn();
+  long mappedValue = map(value, 0, 1023, 0, MAX_BRIGHTNESS);
+  uint8_t brightness = static_cast<uint8_t>(mappedValue);
 
   switch (pinId) {
   case 0:
     // This knob controls the reading light when is in use
     // Otherwise, controls the ambient light
     if (isReadingInUse) {
-      multiKnob->readingLight->setBrightness(value);
+      multiKnob->readingLight->setBrightness(brightness);
     } else {
-      ambientLight.setBrightness(value);
+      ambientLight.setBrightness(brightness);
     }
 
     break;
@@ -77,7 +79,7 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
     // This knob controls the ambient light light when reading is not in use
     // Otherwise, will control ceiling light
     if (isReadingInUse) {
-      multiKnob->readingLight->setBrightness(value);
+      ambientLight.setBrightness(brightness);
     } else {
       // TODO: Call Shelly API
     }
@@ -90,16 +92,15 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
 /////////
 // SETUP
 /////////
-void callback(uint16_t value, void *) {
-  long mappedValue = map(value, 0, 1023, 0, MAX_BRIGHTNESS);
-  uint8_t brightness = static_cast<uint8_t>(mappedValue);
-  ambientLight.setBrightness(brightness);
-}
 
-Knob testKnob(POTEN_3, DEFAULT_RESOLUTION);
-void knobsSetup() { testKnob.setCallback(&callback); };
+uint8_t leftKnobPins[] = {POTEN_1, POTEN_2};
+uint8_t rightKnobPins[] = {POTEN_3, POTEN_4};
+MultiKnob leftKnobs(leftKnobPins, &readingLeft);
+MultiKnob rightKnobs(rightKnobPins, &readingRight);
+
+void knobsSetup() { rightKnobs.setup(); };
 
 /////////
 // LOOP
 /////////
-void knobsLoop() { testKnob.poll(); };
+void knobsLoop() { rightKnobs.poll(); };
