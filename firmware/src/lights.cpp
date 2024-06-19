@@ -30,8 +30,14 @@ void ReadingLight::reset() {
 bool ReadingLight::getIsOn() { return isOn; }
 
 void ReadingLight::setBrightness(uint8_t value) {
-  brightness = value;
-  applyNewBrightness();
+  // Prevents big jumps when using multiple switches / knobs
+  if (value != brightness &&
+      abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
+
+    brightness = value, 80, MAX_BRIGHTNESS;
+    applyNewBrightness();
+    FastLED.show();
+  }
 }
 
 void ReadingLight::applyNewBrightness() {
@@ -63,8 +69,9 @@ void AmbientLight::reset() {
 bool AmbientLight::getIsOn() { return isOn; }
 
 void AmbientLight::setBrightness(uint8_t value) {
+  // Prevents big jumps when using multiple switches / knobs
   if (value != brightness &&
-      abs8(value - brightness) > MIN_BRIGHTNESS_DIFFERENCE) {
+      abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
 
     brightness = value;
     isOn = brightness > MIN_BRIGHTNESS;
@@ -232,7 +239,7 @@ SectionConfig topConfig = {
 SectionConfig dioramaConfig = {
   lowerBound : 180,
   maxBrightness : 70,
-  satOffset : 25,
+  satOffset : 10,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,

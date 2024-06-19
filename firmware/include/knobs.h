@@ -12,8 +12,9 @@
 #define NUM_KNOBS 2
 
 #define KNOB_RESOLUTION 10                 // Over 1024
-#define MAX_GAP 50                         // Over 1024
-#define SECONDARY_LIGHT_MAX_TIME 30 * 1000 // 30 seconds
+
+#define MIN_VALUE 0
+#define MAX_VALUE 1023
 
 extern uint8_t leftKnobPins[NUM_KNOBS];
 extern uint8_t rightKnobPins[NUM_KNOBS];

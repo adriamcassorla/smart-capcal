@@ -11,8 +11,11 @@ Knob::Knob(uint8_t pinNumber, uint8_t stepResolution = 2)
 
 void Knob::poll() {
   uint16_t read = analogRead(pin);
-  if (abs(read - value) < resolution) return;
-  else {
+
+  // Only calls the callback when the difference is greater than the resolution
+  // Also calls it at the extreme values
+  if (read != value && (abs(read - value) > resolution || read == MIN_VALUE ||
+                        read == MAX_VALUE)) {
     value = read;
     if (callback) callback(value, callbackParam);
   }
@@ -36,6 +39,7 @@ MultiKnob::MultiKnob(uint8_t *pinNumbers, ReadingLight *light)
   }
 }
 
+int MultiKnob::pinIds[NUM_KNOBS] = {0, 1};
 void MultiKnob::setup() {
   for (uint8_t i = 0; i < NUM_KNOBS; ++i) {
     MultiKnobCallbackData *callbackData =
@@ -60,17 +64,21 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
   if (!multiKnob) { return; }
 
   int pinId = data->pinId;
+
+  // Determines which knob controls what
   bool isReadingInUse = multiKnob->readingLight->getIsOn();
-  long mappedValue = map(value, 0, 1023, 0, MAX_BRIGHTNESS);
-  uint8_t brightness = static_cast<uint8_t>(mappedValue);
 
   switch (pinId) {
   case 0:
     // This knob controls the reading light when is in use
     // Otherwise, controls the ambient light
     if (isReadingInUse) {
+      uint8_t brightness =
+          map(value, MIN_VALUE, MAX_VALUE, READING_MIN_VALUE, MAX_BRIGHTNESS);
       multiKnob->readingLight->setBrightness(brightness);
     } else {
+      uint8_t brightness =
+          map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
       ambientLight.setBrightness(brightness);
     }
 
@@ -79,6 +87,8 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
     // This knob controls the ambient light light when reading is not in use
     // Otherwise, will control ceiling light
     if (isReadingInUse) {
+      uint8_t brightness =
+          map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
       ambientLight.setBrightness(brightness);
     } else {
       // TODO: Call Shelly API
