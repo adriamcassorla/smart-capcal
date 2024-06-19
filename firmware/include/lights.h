@@ -10,10 +10,8 @@
 #define MAX_AMPS 30000
 
 #define MAX_BRIGHTNESS 255
-#define MIN_BRIGHTNESS 50
+#define MIN_BRIGHTNESS 45
 #define DEFAULT_BRIGHTNESS 218
-#define DEFAULT_BLUR_FACTOR 170
-#define DEFAULT_BLUR_AMOUNT 5
 #define WARM_WHITE_HUE 30
 #define WARM_WHITE_SAT 200
 
@@ -53,8 +51,8 @@ struct SectionConfig {
   uint8_t maxBrightness = MAX_BRIGHTNESS;
   uint16_t firstLedOffset = 0; // Previous leds will be on from the start
   uint16_t lastLedOffset = 0;  // Substracted from the total length
-  uint8_t blurFactor = DEFAULT_BLUR_FACTOR;
-  uint8_t blurAmount = DEFAULT_BLUR_AMOUNT;
+  int hueOffset = 0;
+  int satOffset = 0;
 };
 
 struct LightSection {

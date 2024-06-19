@@ -87,21 +87,24 @@ void AmbientLight::applyNewBrightness() {
                     lightSections[n].config->upperBound,
                     lightSections[n].config->firstLedOffset, maxLength);
 
+      // Compensates saturation for low brightness (otherwise tends to red)
+      int sCompensation =
+          sectionBrightness < MAX_BRIGHTNESS
+              ? map(sectionBrightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS, 40, 0)
+              : 0;
+
+      // Creates a HSV color with the resulting brightness
+      CHSV color = CHSV(
+          WARM_WHITE_HUE + lightSections[n].config->hueOffset,
+          WARM_WHITE_SAT + lightSections[n].config->satOffset - sCompensation,
+          sectionBrightness
+      );
+
       // When the section is mirrorred, adds an offset to the array pointer
       uint16_t pOffset =
           lightSections[n].mirror ? lightSections[n].length - sectionLength : 0;
 
-      // Creates a color with the resulting brightness and fills the section
-      CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, sectionBrightness);
       fill_solid(lightSections[n].ledsArray + pOffset, sectionLength, color);
-
-      // Finally blurs the whole array to create a smoother transition
-      for (uint8_t i = 0; i < lightSections[n].config->blurAmount; i++) {
-        blur1d(
-            lightSections[n].ledsArray, lightSections[n].length,
-            lightSections[n].config->blurFactor
-        );
-      }
     }
   }
 
@@ -210,20 +213,18 @@ SectionConfig ambientConfig = {
 };
 SectionConfig topConfig = {
   lowerBound : 100,
-  minBrightness : 80,
-  firstLedOffset : 5, // Starts from the center but not from a point
+  minBrightness : 127,
+  firstLedOffset : 10, // Starts from the center but not from a point
 };
 SectionConfig dioramaConfig = {
-  lowerBound : 127,
-  upperBound : 215,
-  maxBrightness : 80,
-  blurAmount : 0,
+  lowerBound : 180,
+  maxBrightness : 70,
+  satOffset : 30,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
-  maxBrightness : 200,
-  lastLedOffset : 100,
-  blurAmount : 10,
+  maxBrightness : 190,
+  lastLedOffset : 80,
 };
 
 // Sections initialisation
