@@ -15,14 +15,14 @@ ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse)
 
 void ReadingLight::toggle() {
   isOn = !isOn;
-
   brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
-  fill_solid(readingLeds, numLeds, color);
-  FastLED.show();
+  applyNewBrightness();
 }
 
-void ReadingLight::setBrightness(uint8_t value) { brightness = value; }
+void ReadingLight::setBrightness(uint8_t value) {
+  brightness = value;
+  applyNewBrightness();
+}
 
 void ReadingLight::reset() {
   isOn = false;
@@ -30,6 +30,12 @@ void ReadingLight::reset() {
 }
 
 bool ReadingLight::getIsOn() { return isOn; }
+
+void ReadingLight::applyNewBrightness() {
+  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
+  fill_solid(readingLeds, numLeds, color);
+  FastLED.show();
+}
 
 /////
 // Ambient Light Implementation
@@ -50,9 +56,7 @@ void AmbientLight::setBrightness(uint8_t value) {
       abs8(value - brightness) > MIN_BRIGHTNESS_DIFFERENCE) {
 
     brightness = value;
-
-    // TODO: Only do it when actively moving
-    //  isOn = brightness > MIN_BRIGHTNESS;
+    isOn = brightness > MIN_BRIGHTNESS;
 
     applyNewBrightness();
   }

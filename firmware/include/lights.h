@@ -78,6 +78,8 @@ private:
   bool isOn;
   uint8_t brightness;
   bool isReversed;
+
+  void applyNewBrightness();
 };
 
 class AmbientLight {
