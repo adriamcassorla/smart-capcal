@@ -90,7 +90,8 @@ void AmbientLight::applyNewBrightness() {
       // Compensates saturation for low brightness (otherwise tends to red)
       int sCompensation =
           sectionBrightness < MAX_BRIGHTNESS
-              ? map(sectionBrightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS, 40, 0)
+              ? map(sectionBrightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS,
+                    WARM_WHITE_SAT_COMPENSATION, 0)
               : 0;
 
       // Creates a HSV color with the resulting brightness
@@ -213,13 +214,12 @@ SectionConfig ambientConfig = {
 };
 SectionConfig topConfig = {
   lowerBound : 100,
-  minBrightness : 127,
   firstLedOffset : 10, // Starts from the center but not from a point
 };
 SectionConfig dioramaConfig = {
   lowerBound : 180,
   maxBrightness : 70,
-  satOffset : 30,
+  satOffset : 25,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
