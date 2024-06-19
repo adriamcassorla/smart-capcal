@@ -69,6 +69,7 @@ public:
   void toggle();
   void setBrightness(uint8_t value);
   void reset();
+  bool getIsOn();
 
 private:
   struct CRGB *readingLeds;
@@ -85,6 +86,7 @@ public:
   void toggle();
   void setBrightness(uint8_t value);
   void reset();
+  bool getIsOn();
 
 private:
   struct LightSection *lightSections;
@@ -108,7 +110,7 @@ public:
   void setMode(Mode mode);
   void stop();
   void loop();
-  bool isOn;
+  bool getIsOn();
 
 private:
   struct LightSection *lightSections;
@@ -116,6 +118,7 @@ private:
 
   uint8_t brightness;
   Mode activeMode;
+  bool isOn;
 
   void applyRandomPalette(
       struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,

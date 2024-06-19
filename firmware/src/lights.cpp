@@ -19,7 +19,6 @@ void ReadingLight::toggle() {
   brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
   CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
   fill_solid(readingLeds, numLeds, color);
-
   FastLED.show();
 }
 
@@ -29,6 +28,8 @@ void ReadingLight::reset() {
   isOn = false;
   brightness = DEFAULT_BRIGHTNESS;
 }
+
+bool ReadingLight::getIsOn() { return isOn; }
 
 /////
 // Ambient Light Implementation
@@ -117,12 +118,14 @@ void AmbientLight::reset() {
   brightness = MAX_BRIGHTNESS;
 }
 
+bool AmbientLight::getIsOn() { return isOn; }
+
 /////
 // Demo Lights Implementation
 /////
 DemoLights::DemoLights(LightSection *sections, uint16_t length)
-    : isOn(false), lightSections(sections), numSections(length),
-      brightness(DEFAULT_BRIGHTNESS), activeMode(Mode::Rainbow) {}
+    : lightSections(sections), numSections(length),
+      brightness(DEFAULT_BRIGHTNESS), activeMode(Mode::Rainbow), isOn(false) {}
 
 void DemoLights::toggle() {
   isOn = !isOn;
@@ -193,6 +196,8 @@ void DemoLights::applyRandomPalette(
     );
   }
 }
+
+bool DemoLights::getIsOn() { return isOn; }
 
 /////////
 // SETUP
@@ -305,5 +310,5 @@ void lightsSetup() {
 
 void lightsLoop() {
   demoLights.loop();
-  if (demoLights.isOn) { FastLED.show(); }
+  if (demoLights.getIsOn()) { FastLED.show(); }
 };

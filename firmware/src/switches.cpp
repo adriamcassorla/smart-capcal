@@ -43,7 +43,7 @@ void MultiSwitch::callback(void *callbackData) {
   if (!multiSwitch) { return; }
 
   // Stop demo if isOn and another switch has been selected
-  if (demoLights.isOn && pinId != 2) {
+  if (demoLights.getIsOn() && pinId != 2) {
     demoLights.stop();
   }
   // Reset other lights when demo mode is selected
