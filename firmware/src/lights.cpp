@@ -34,7 +34,7 @@ void ReadingLight::setBrightness(uint8_t value) {
   if (value != brightness &&
       abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
 
-    brightness = value, 80, MAX_BRIGHTNESS;
+    brightness = value;
     applyNewBrightness();
     FastLED.show();
   }
