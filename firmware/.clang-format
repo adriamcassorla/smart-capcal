@@ -1,3 +1,4 @@
+Language: Cpp
 ColumnLimit: 80
 BreakBeforeBraces: Attach
 IndentWidth: 2
@@ -16,3 +17,22 @@ AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: Inline
 BinPackArguments: false
 BinPackParameters: false
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializers: BeforeColon
+BreakFunctionDefinitionParameters: false
+BreakInheritanceList: AfterColon
+IndentCaseLabels: true
+InsertTrailingCommas: true
+KeepEmptyLinesAtTheStartOfBlocks: false
+PackConstructorInitializers: NextLine
+PointerAlignment: Right
+ReferenceAlignment: Right
+ReflowComments: true
+RemoveBracesLLVM: true
+RemoveParentheses: true
+SeparateDefinitionBlocks: Always
+SortIncludes: CaseInsensitive
+SpaceAfterLogicalNot: false
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeSquareBrackets: false
