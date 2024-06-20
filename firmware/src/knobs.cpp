@@ -31,12 +31,12 @@ void Knob::setCallback(knobCallback_t cb, void *param) {
 /////
 MultiKnob::MultiKnob(uint8_t *pinNumbers, ReadingLight *light)
     : readingLight(light) {
-  for (uint8_t i = 0; i < NUM_KNOBS; ++i) {
+  for (uint8_t i = 0; i < NUM_KNOBS; ++i)
     knobs[i] = new Knob(pinNumbers[i], KNOB_RESOLUTION);
-  }
 }
 
 int MultiKnob::pinIds[NUM_KNOBS] = {0, 1};
+
 void MultiKnob::setup() {
   for (uint8_t i = 0; i < NUM_KNOBS; ++i) {
     MultiKnobCallbackData *callbackData =
@@ -46,9 +46,8 @@ void MultiKnob::setup() {
 }
 
 void MultiKnob::poll() {
-  for (uint8_t i = 0; i < NUM_KNOBS; ++i) {
+  for (uint8_t i = 0; i < NUM_KNOBS; ++i)
     knobs[i]->poll();
-  }
 }
 
 void MultiKnob::callback(uint16_t value, void *callbackData) {
@@ -58,7 +57,7 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
 
   // Access own instance of MultiSwitch and the pinId
   MultiKnob *multiKnob = data->instance;
-  if (!multiKnob) { return; }
+  if (!multiKnob) return;
 
   int pinId = data->pinId;
 
@@ -66,33 +65,32 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
   bool isReadingInUse = multiKnob->readingLight->getIsOn();
 
   switch (pinId) {
-  case 0:
-    // This knob controls the reading light when is in use
-    // Otherwise, controls the ambient light
-    if (isReadingInUse) {
-      uint8_t brightness =
-          map(value, MIN_VALUE, MAX_VALUE, READING_MIN_VALUE, MAX_BRIGHTNESS);
-      multiKnob->readingLight->setBrightness(brightness);
-    } else {
-      uint8_t brightness =
-          map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
-      ambientLight.setBrightness(brightness);
-    }
+    case 0:
+      // This knob controls the reading light when is in use
+      // Otherwise, controls the ambient light
+      if (isReadingInUse) {
+        uint8_t brightness =
+            map(value, MIN_VALUE, MAX_VALUE, READING_MIN_VALUE, MAX_BRIGHTNESS);
+        multiKnob->readingLight->setBrightness(brightness, KNOB_ANIMATION_TIME);
+      } else {
+        uint8_t brightness =
+            map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
+        ambientLight.setBrightness(brightness);
+      }
 
-    break;
-  case 1:
-    // This knob controls the ambient light light when reading is not in use
-    // Otherwise, will control ceiling light
-    if (isReadingInUse) {
-      uint8_t brightness =
-          map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
-      ambientLight.setBrightness(brightness);
-    } else {
-      // TODO: Call Shelly API
-    }
-    break;
-  default:
-    break;
+      break;
+    case 1:
+      // This knob controls the ambient light light when reading is not in use
+      // Otherwise, will control ceiling light
+      if (isReadingInUse) {
+        uint8_t brightness =
+            map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
+        ambientLight.setBrightness(brightness);
+      } else {
+        // TODO: Call Shelly API
+      }
+      break;
+    default: break;
   }
 }
 
@@ -105,9 +103,13 @@ uint8_t rightKnobPins[] = {POTEN_3, POTEN_4};
 MultiKnob leftKnobs(leftKnobPins, &readingLeft);
 MultiKnob rightKnobs(rightKnobPins, &readingRight);
 
-void knobsSetup() { rightKnobs.setup(); };
+void knobsSetup() {
+  rightKnobs.setup();
+};
 
 /////////
 // LOOP
 /////////
-void knobsLoop() { rightKnobs.poll(); };
+void knobsLoop() {
+  rightKnobs.poll();
+};

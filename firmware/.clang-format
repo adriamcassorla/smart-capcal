@@ -1,9 +1,7 @@
-Language: Cpp
 ColumnLimit: 80
 BreakBeforeBraces: Attach
 IndentWidth: 2
 MaxEmptyLinesToKeep: 1
-OverEmptyLines: 2
 AlignAfterOpenBracket: BlockIndent
 AllowShortBlocksOnASingleLine: Always
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
@@ -19,17 +17,14 @@ BinPackArguments: false
 BinPackParameters: false
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: BeforeColon
-BreakFunctionDefinitionParameters: false
 BreakInheritanceList: AfterColon
 IndentCaseLabels: true
-InsertTrailingCommas: true
 KeepEmptyLinesAtTheStartOfBlocks: false
 PackConstructorInitializers: NextLine
 PointerAlignment: Right
 ReferenceAlignment: Right
 ReflowComments: true
 RemoveBracesLLVM: true
-RemoveParentheses: true
 SeparateDefinitionBlocks: Always
 SortIncludes: CaseInsensitive
 SpaceAfterLogicalNot: false

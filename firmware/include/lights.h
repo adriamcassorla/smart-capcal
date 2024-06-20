@@ -37,6 +37,12 @@
 
 #define MAX_BRIGHTNESS_DIFFERENCE 8 // Over 256
 
+#define SECOND 1000
+#define INITIAL_DELAY 2 * SECOND
+#define FRAMES_PER_SECOND 60
+#define ANIMATION_INTERVAL 16 // SECOND / FRAMES_PER_SECOND
+#define READING_ANIMATION_TIME 200
+
 extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
 extern CRGB topLeds[NUM_LEDS_TOP];
@@ -70,16 +76,26 @@ public:
   void toggle();
   void refresh();
   void reset();
+
   bool getIsOn();
-  void setBrightness(uint8_t value);
+  bool getIsAnimating();
+  void setBrightness(uint8_t value, int duration);
+
+  void loop();
 
 private:
   struct CRGB *readingLeds;
   uint8_t numLeds;
 
   bool isOn;
+  bool isAnimating;
+
   uint8_t brightness;
+  uint8_t targetBrightness;
   uint8_t lastBrightness;
+
+  elapsedMillis elapsedDuration;
+  long unsigned int targetDuration;
   bool isReversed;
 
   void applyNewBrightness();
@@ -107,6 +123,7 @@ private:
 class DemoLights {
 public:
   DemoLights(LightSection *lightSections, uint16_t length);
+
   enum Mode {
     Rainbow,
     Chromotherapy,
@@ -128,8 +145,12 @@ private:
   bool isOn;
 
   void applyRandomPalette(
-      struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
-      uint8_t indexScale, uint8_t minBrightness, uint8_t maxBrightness
+      struct CRGB *targetArray,
+      CRGBPalette16 &pal,
+      uint16_t numLeds,
+      uint8_t indexScale,
+      uint8_t minBrightness,
+      uint8_t maxBrightness
   );
   void rainbow_beat();
   void chromoteraphy_beat();

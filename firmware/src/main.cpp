@@ -7,10 +7,6 @@
 #include "lights.h"
 #include "switches.h"
 
-#define SECOND 1000
-#define INITIAL_DELAY 2 * SECOND
-#define FRAMES_PER_SECOND 24
-#define ANIMATION_INTERVAL SECOND / FRAMES_PER_SECOND
 #define POLL_INTERVAL 50
 
 /////////
@@ -35,5 +31,7 @@ void loop() {
     knobsLoop();
   }
 
-  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) { lightsLoop(); }
+  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) {
+    lightsLoop();
+  }
 }
