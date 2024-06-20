@@ -79,6 +79,7 @@ private:
 
   bool isOn;
   uint8_t brightness;
+  uint8_t lastBrightness;
   bool isReversed;
 
   void applyNewBrightness();
@@ -98,6 +99,7 @@ private:
   uint8_t numSections;
   bool isOn;
   uint8_t brightness;
+  uint8_t lastBrightness;
 
   void applyNewBrightness();
 };

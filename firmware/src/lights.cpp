@@ -11,11 +11,16 @@
 /////
 ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse)
     : readingLeds(array), numLeds(length), isOn(false),
-      brightness(DEFAULT_BRIGHTNESS), isReversed(reverse) {}
+      brightness(DEFAULT_BRIGHTNESS), lastBrightness(DEFAULT_BRIGHTNESS),
+      isReversed(reverse) {}
 
 void ReadingLight::toggle() {
+  // Stores the last value when switching off
+  if (isOn) lastBrightness = brightness;
+
   isOn = !isOn;
-  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
+  brightness = isOn ? lastBrightness : 0;
+
   applyNewBrightness();
   FastLED.show();
 }
@@ -50,12 +55,14 @@ void ReadingLight::applyNewBrightness() {
 /////
 AmbientLight::AmbientLight(LightSection *sections, uint16_t length)
     : lightSections(sections), numSections(length), isOn(false),
-      brightness(DEFAULT_BRIGHTNESS) {}
+      brightness(MAX_BRIGHTNESS), lastBrightness(MAX_BRIGHTNESS) {}
 
 void AmbientLight::toggle() {
+  // Stores the last value when switching off
+  if (isOn) lastBrightness = brightness;
   isOn = !isOn;
 
-  brightness = isOn ? MAX_BRIGHTNESS : 0;
+  brightness = isOn ? lastBrightness : 0;
   applyNewBrightness();
 }
 
@@ -111,11 +118,13 @@ void AmbientLight::applyNewBrightness() {
                     lightSections[n].config->firstLedOffset, maxLength);
 
       // Compensates saturation for low brightness (otherwise tends to red)
-      int sCompensation =
-          sectionBrightness < MAX_BRIGHTNESS
-              ? map(sectionBrightness, MIN_BRIGHTNESS, MAX_BRIGHTNESS,
-                    WARM_WHITE_SAT_COMPENSATION, 0)
-              : 0;
+      int sCompensation = sectionBrightness < MAX_BRIGHTNESS
+                            ? map(sectionBrightness,
+                                  MIN_BRIGHTNESS,
+                                  DEFAULT_BRIGHTNESS,
+                                  WARM_WHITE_SAT_COMPENSATION,
+                                  0)
+                            : 0;
 
       // Creates a HSV color with the resulting brightness
       CHSV color = CHSV(
@@ -229,7 +238,6 @@ ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
 
 // Section configurations for ambient and demo modes
 SectionConfig ambientConfig = {
-  upperBound : 200,
   firstLedOffset : 30 // Starts with full floor lights on
 };
 SectionConfig topConfig = {

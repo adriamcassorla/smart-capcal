@@ -26,8 +26,6 @@ void Knob::setCallback(knobCallback_t cb, void *param) {
   callbackParam = param;
 }
 
-uint16_t Knob::getValue() { return value; }
-
 /////
 // MultiKnob Implementation
 /////
@@ -35,7 +33,6 @@ MultiKnob::MultiKnob(uint8_t *pinNumbers, ReadingLight *light)
     : readingLight(light) {
   for (uint8_t i = 0; i < NUM_KNOBS; ++i) {
     knobs[i] = new Knob(pinNumbers[i], KNOB_RESOLUTION);
-    lastInteraction[i] = 0;
   }
 }
 

@@ -11,7 +11,7 @@
 
 #define NUM_KNOBS 2
 
-#define KNOB_RESOLUTION 10                 // Over 1024
+#define KNOB_RESOLUTION 8
 
 #define MIN_VALUE 0
 #define MAX_VALUE 1023
@@ -32,7 +32,6 @@ public:
   Knob(uint8_t pinNumber, uint8_t stepResolution);
   void poll();
   void setCallback(knobCallback_t cb, void *param = nullptr);
-  uint16_t getValue();
 
 private:
   uint8_t pin;
@@ -53,7 +52,6 @@ private:
   static int pinIds[NUM_KNOBS];
   Knob *knobs[NUM_KNOBS];
   ReadingLight *readingLight;
-  elapsedMillis lastInteraction[NUM_KNOBS];
 
   static void callback(uint16_t value, void *callbackData);
 };
