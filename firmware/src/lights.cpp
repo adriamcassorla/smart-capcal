@@ -35,10 +35,7 @@ void ReadingLight::reset() {
 bool ReadingLight::getIsOn() { return isOn; }
 
 void ReadingLight::setBrightness(uint8_t value) {
-  // Prevents big jumps when using multiple switches / knobs
-  if (value != brightness &&
-      abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
-
+  if (value != brightness) {
     brightness = value;
     applyNewBrightness();
     FastLED.show();
@@ -76,9 +73,10 @@ void AmbientLight::reset() {
 bool AmbientLight::getIsOn() { return isOn; }
 
 void AmbientLight::setBrightness(uint8_t value) {
-  // Prevents big jumps when using multiple switches / knobs
+  // Prevents big jumps from off to on state
+  // when using multiple switches and knobs
   if (value != brightness &&
-      abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE) {
+      (isOn || abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE)) {
 
     brightness = value;
     isOn = brightness > MIN_BRIGHTNESS;

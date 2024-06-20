@@ -35,7 +35,7 @@
 #define CLOCK_PIN_READING 6 // 49 SCK2
 #define DATA_PIN_READING 7  // 50 MOSI2
 
-#define MAX_BRIGHTNESS_DIFFERENCE 64 // Over 256
+#define MAX_BRIGHTNESS_DIFFERENCE 8 // Over 256
 
 extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
