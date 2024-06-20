@@ -43,7 +43,7 @@ void MultiSwitch::callback(void *callbackData) {
   if (!multiSwitch) { return; }
 
   // Stop demo if isOn and another switch has been selected
-  if (demoLights.isOn && pinId != 2) {
+  if (demoLights.getIsOn() && pinId != 2) {
     demoLights.stop();
   }
   // Reset other lights when demo mode is selected
@@ -73,8 +73,8 @@ void MultiSwitch::callback(void *callbackData) {
 // SETUP
 /////////
 
-uint8_t leftPins[] = {27, 31, 25};
-uint8_t rightPins[] = {28, 29, 30};
+uint8_t leftPins[] = {SWITCH_1, SWITCH_2, SWITCH_3};
+uint8_t rightPins[] = {SWITCH_4, SWITCH_5, SWITCH_6};
 MultiSwitch leftSwitches(leftPins, &readingLeft, DemoLights::Mode::Rainbow);
 MultiSwitch
     rightSwitches(rightPins, &readingRight, DemoLights::Mode::Chromotherapy);

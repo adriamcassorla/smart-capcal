@@ -11,23 +11,40 @@
 /////
 ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse)
     : readingLeds(array), numLeds(length), isOn(false),
-      brightness(DEFAULT_BRIGHTNESS), isReversed(reverse) {}
+      brightness(DEFAULT_BRIGHTNESS), lastBrightness(DEFAULT_BRIGHTNESS),
+      isReversed(reverse) {}
 
 void ReadingLight::toggle() {
+  // Stores the last value when switching off
+  if (isOn) lastBrightness = brightness;
+
   isOn = !isOn;
+  brightness = isOn ? lastBrightness : 0;
 
-  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
-  fill_solid(readingLeds, numLeds, color);
-
+  applyNewBrightness();
   FastLED.show();
 }
 
-void ReadingLight::setBrightness(uint8_t value) { brightness = value; }
+void ReadingLight::refresh() { applyNewBrightness(); }
 
 void ReadingLight::reset() {
   isOn = false;
   brightness = DEFAULT_BRIGHTNESS;
+}
+
+bool ReadingLight::getIsOn() { return isOn; }
+
+void ReadingLight::setBrightness(uint8_t value) {
+  if (value != brightness) {
+    brightness = value;
+    applyNewBrightness();
+    FastLED.show();
+  }
+}
+
+void ReadingLight::applyNewBrightness() {
+  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
+  fill_solid(readingLeds, numLeds, color);
 }
 
 /////
@@ -35,23 +52,34 @@ void ReadingLight::reset() {
 /////
 AmbientLight::AmbientLight(LightSection *sections, uint16_t length)
     : lightSections(sections), numSections(length), isOn(false),
-      brightness(DEFAULT_BRIGHTNESS) {}
+      brightness(MAX_BRIGHTNESS), lastBrightness(MAX_BRIGHTNESS) {}
 
 void AmbientLight::toggle() {
+  // Stores the last value when switching off
+  if (isOn) lastBrightness = brightness;
   isOn = !isOn;
 
-  brightness = isOn ? MAX_BRIGHTNESS : 0;
+  brightness = isOn ? lastBrightness : 0;
   applyNewBrightness();
 }
 
+void AmbientLight::refresh() { applyNewBrightness(); }
+
+void AmbientLight::reset() {
+  isOn = false;
+  brightness = MAX_BRIGHTNESS;
+}
+
+bool AmbientLight::getIsOn() { return isOn; }
+
 void AmbientLight::setBrightness(uint8_t value) {
+  // Prevents big jumps from off to on state
+  // when using multiple switches and knobs
   if (value != brightness &&
-      abs8(value - brightness) > MIN_BRIGHTNESS_DIFFERENCE) {
+      (isOn || abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE)) {
 
     brightness = value;
-
-    // TODO: Only do it when actively moving
-    //  isOn = brightness > MIN_BRIGHTNESS;
+    isOn = brightness > MIN_BRIGHTNESS;
 
     applyNewBrightness();
   }
@@ -87,38 +115,39 @@ void AmbientLight::applyNewBrightness() {
                     lightSections[n].config->upperBound,
                     lightSections[n].config->firstLedOffset, maxLength);
 
+      // Compensates saturation for low brightness (otherwise tends to red)
+      int sCompensation = sectionBrightness < MAX_BRIGHTNESS
+                            ? map(sectionBrightness,
+                                  MIN_BRIGHTNESS,
+                                  DEFAULT_BRIGHTNESS,
+                                  WARM_WHITE_SAT_COMPENSATION,
+                                  0)
+                            : 0;
+
+      // Creates a HSV color with the resulting brightness
+      CHSV color = CHSV(
+          WARM_WHITE_HUE + lightSections[n].config->hueOffset,
+          WARM_WHITE_SAT + lightSections[n].config->satOffset - sCompensation,
+          sectionBrightness
+      );
+
       // When the section is mirrorred, adds an offset to the array pointer
       uint16_t pOffset =
           lightSections[n].mirror ? lightSections[n].length - sectionLength : 0;
 
-      // Creates a color with the resulting brightness and fills the section
-      CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, sectionBrightness);
       fill_solid(lightSections[n].ledsArray + pOffset, sectionLength, color);
-
-      // Finally blurs the whole array to create a smoother transition
-      for (uint8_t i = 0; i < lightSections[n].config->blurAmount; i++) {
-        blur1d(
-            lightSections[n].ledsArray, lightSections[n].length,
-            lightSections[n].config->blurFactor
-        );
-      }
     }
   }
 
   FastLED.show();
 }
 
-void AmbientLight::reset() {
-  isOn = false;
-  brightness = MAX_BRIGHTNESS;
-}
-
 /////
 // Demo Lights Implementation
 /////
 DemoLights::DemoLights(LightSection *sections, uint16_t length)
-    : isOn(false), lightSections(sections), numSections(length),
-      brightness(DEFAULT_BRIGHTNESS), activeMode(Mode::Rainbow) {}
+    : lightSections(sections), numSections(length),
+      brightness(DEFAULT_BRIGHTNESS), activeMode(Mode::Rainbow), isOn(false) {}
 
 void DemoLights::toggle() {
   isOn = !isOn;
@@ -126,15 +155,17 @@ void DemoLights::toggle() {
   FastLED.show();
 }
 
-void DemoLights::setBrightness(uint8_t value) { brightness = value; }
-
-void DemoLights::setMode(Mode mode) { activeMode = mode; }
-
 void DemoLights::stop() {
   isOn = false;
   FastLED.clear();
   FastLED.show();
 }
+
+bool DemoLights::getIsOn() { return isOn; }
+
+void DemoLights::setBrightness(uint8_t value) { brightness = value; }
+
+void DemoLights::setMode(Mode mode) { activeMode = mode; }
 
 void DemoLights::loop() {
   if (isOn) {
@@ -150,6 +181,21 @@ void DemoLights::loop() {
     default:
       break;
     }
+  }
+}
+
+void DemoLights::applyRandomPalette(
+    struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
+    uint8_t indexScale, uint8_t minBrightness, uint8_t maxBrightness
+) {
+  for (u_int16_t i = 0; i < numLeds; i++) {
+    uint8_t b = inoise8(i, millis() / 30);
+    uint16_t index = inoise16(i * indexScale, millis() / 20);
+
+    targetArray[i] = ColorFromPalette(
+        pal, constrain(index, 0, numLeds - 1),
+        constrain(b, minBrightness, maxBrightness)
+    );
   }
 }
 
@@ -175,21 +221,6 @@ void DemoLights::chromoteraphy_beat() {
   }
 }
 
-void DemoLights::applyRandomPalette(
-    struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
-    uint8_t indexScale, uint8_t minBrightness, uint8_t maxBrightness
-) {
-  for (u_int16_t i = 0; i < numLeds; i++) {
-    uint8_t b = inoise8(i, millis() / 30);
-    uint16_t index = inoise16(i * indexScale, millis() / 20);
-
-    targetArray[i] = ColorFromPalette(
-        pal, constrain(index, 0, numLeds - 1),
-        constrain(b, minBrightness, maxBrightness)
-    );
-  }
-}
-
 /////////
 // SETUP
 /////////
@@ -205,25 +236,21 @@ ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
 
 // Section configurations for ambient and demo modes
 SectionConfig ambientConfig = {
-  upperBound : 200,
   firstLedOffset : 30 // Starts with full floor lights on
 };
 SectionConfig topConfig = {
   lowerBound : 100,
-  minBrightness : 80,
-  firstLedOffset : 5, // Starts from the center but not from a point
+  firstLedOffset : 10, // Starts from the center but not from a point
 };
 SectionConfig dioramaConfig = {
-  lowerBound : 127,
-  upperBound : 215,
-  maxBrightness : 80,
-  blurAmount : 0,
+  lowerBound : 180,
+  maxBrightness : 70,
+  satOffset : 10,
 };
 SectionConfig readingConfig = {
   lowerBound : 200,
-  maxBrightness : 200,
-  lastLedOffset : 100,
-  blurAmount : 10,
+  maxBrightness : 190,
+  lastLedOffset : 80,
 };
 
 // Sections initialisation
@@ -304,5 +331,5 @@ void lightsSetup() {
 
 void lightsLoop() {
   demoLights.loop();
-  if (demoLights.isOn) { FastLED.show(); }
+  if (demoLights.getIsOn()) { FastLED.show(); }
 };

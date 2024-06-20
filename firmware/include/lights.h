@@ -10,12 +10,12 @@
 #define MAX_AMPS 30000
 
 #define MAX_BRIGHTNESS 255
-#define MIN_BRIGHTNESS 50
+#define MIN_BRIGHTNESS 20
 #define DEFAULT_BRIGHTNESS 218
-#define DEFAULT_BLUR_FACTOR 170
-#define DEFAULT_BLUR_AMOUNT 5
 #define WARM_WHITE_HUE 30
 #define WARM_WHITE_SAT 200
+#define WARM_WHITE_SAT_COMPENSATION 30
+#define READING_MIN_VALUE 80
 
 #define NUM_LEDS_AMBIENT 192 // 120 are AMBIENT and 72 are DIORAMA
 #define NUM_LEDS_READING 144
@@ -35,7 +35,7 @@
 #define CLOCK_PIN_READING 6 // 49 SCK2
 #define DATA_PIN_READING 7  // 50 MOSI2
 
-#define MIN_BRIGHTNESS_DIFFERENCE 3
+#define MAX_BRIGHTNESS_DIFFERENCE 8 // Over 256
 
 extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
@@ -53,8 +53,8 @@ struct SectionConfig {
   uint8_t maxBrightness = MAX_BRIGHTNESS;
   uint16_t firstLedOffset = 0; // Previous leds will be on from the start
   uint16_t lastLedOffset = 0;  // Substracted from the total length
-  uint8_t blurFactor = DEFAULT_BLUR_FACTOR;
-  uint8_t blurAmount = DEFAULT_BLUR_AMOUNT;
+  int hueOffset = 0;
+  int satOffset = 0;
 };
 
 struct LightSection {
@@ -68,8 +68,10 @@ class ReadingLight {
 public:
   ReadingLight(struct CRGB *array, uint8_t length, bool reverse);
   void toggle();
-  void setBrightness(uint8_t value);
+  void refresh();
   void reset();
+  bool getIsOn();
+  void setBrightness(uint8_t value);
 
 private:
   struct CRGB *readingLeds;
@@ -77,21 +79,27 @@ private:
 
   bool isOn;
   uint8_t brightness;
+  uint8_t lastBrightness;
   bool isReversed;
+
+  void applyNewBrightness();
 };
 
 class AmbientLight {
 public:
   AmbientLight(LightSection *lightSections, uint16_t length);
   void toggle();
-  void setBrightness(uint8_t value);
+  void refresh();
   void reset();
+  bool getIsOn();
+  void setBrightness(uint8_t value);
 
 private:
   struct LightSection *lightSections;
   uint8_t numSections;
   bool isOn;
   uint8_t brightness;
+  uint8_t lastBrightness;
 
   void applyNewBrightness();
 };
@@ -105,11 +113,11 @@ public:
   };
 
   void toggle();
+  void stop();
+  bool getIsOn();
   void setBrightness(uint8_t value);
   void setMode(Mode mode);
-  void stop();
   void loop();
-  bool isOn;
 
 private:
   struct LightSection *lightSections;
@@ -117,6 +125,7 @@ private:
 
   uint8_t brightness;
   Mode activeMode;
+  bool isOn;
 
   void applyRandomPalette(
       struct CRGB *targetArray, CRGBPalette16 &pal, uint16_t numLeds,
