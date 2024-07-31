@@ -28,18 +28,18 @@
 #define LEFT_AMBIENT_FIRST_LED NUM_LEDS_SIDE_AMBIENT + NUM_LEDS_DIORAMA
 #define NUM_LEDS_HALF_TOP 54
 
-#define CLOCK_PIN_AMBIENT 0 // 13 SCK
-#define DATA_PIN_AMBIENT 1  // 11 MOSI
-#define CLOCK_PIN_TOP 10    // 27 SCK1
-#define DATA_PIN_TOP 11     // 26 MOSI1
-#define CLOCK_PIN_READING 6 // 49 SCK2
-#define DATA_PIN_READING 7  // 50 MOSI2
+#define DATA_PIN_TOP 6       
+#define CLOCK_PIN_TOP 7     
+#define DATA_PIN_READING 11  
+#define CLOCK_PIN_READING 13 
+#define CLOCK_PIN_AMBIENT 27 
+#define DATA_PIN_AMBIENT 28 
 
 #define MAX_BRIGHTNESS_DIFFERENCE 8 // Over 256
 
-extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
-extern CRGB readingLeds[NUM_LEDS_READING * 2];
 extern CRGB topLeds[NUM_LEDS_TOP];
+extern CRGB readingLeds[NUM_LEDS_READING * 2];
+extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 
 extern class ReadingLight readingLeft;
 extern class ReadingLight readingRight;

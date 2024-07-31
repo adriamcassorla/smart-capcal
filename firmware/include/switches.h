@@ -5,12 +5,12 @@
 #include <Arduino.h>
 #include <avdweb_Switch.h>
 
-#define SWITCH_1 27
-#define SWITCH_2 31
-#define SWITCH_3 25
-#define SWITCH_4 28
-#define SWITCH_5 29
-#define SWITCH_6 30
+#define SWITCH_1 23
+#define SWITCH_2 22
+#define SWITCH_3 21
+#define SWITCH_4 14
+#define SWITCH_5 15
+#define SWITCH_6 16
 
 #define NUM_SWITCHES 3
 
