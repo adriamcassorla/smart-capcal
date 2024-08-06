@@ -1,4 +1,3 @@
-#define FASTLED_FORCE_SOFTWARE_SPI
 
 #include <Arduino.h>
 #include <FastLED.h>
