@@ -80,6 +80,9 @@ MultiSwitch
     rightSwitches(rightPins, &readingRight, DemoLights::Mode::Chromotherapy);
 
 void switchesSetup() {
+  pinMode(SWITCHES_GROUND_PIN, OUTPUT);
+  digitalWrite(SWITCHES_GROUND_PIN, LOW);
+
   leftSwitches.setup();
   rightSwitches.setup();
 }

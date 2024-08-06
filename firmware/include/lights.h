@@ -30,10 +30,10 @@
 
 #define DATA_PIN_TOP 6       
 #define CLOCK_PIN_TOP 7     
-#define DATA_PIN_READING 11  
-#define CLOCK_PIN_READING 13 
-#define CLOCK_PIN_AMBIENT 27 
-#define DATA_PIN_AMBIENT 28 
+#define DATA_PIN_READING 28  
+#define CLOCK_PIN_READING 27 
+#define CLOCK_PIN_AMBIENT 12 
+#define DATA_PIN_AMBIENT 11 
 
 #define MAX_BRIGHTNESS_DIFFERENCE 8 // Over 256
 
