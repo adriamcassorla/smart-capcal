@@ -75,7 +75,7 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
       } else {
         uint8_t brightness =
             map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
-        ambientLight.setBrightness(brightness);
+        ambientLight.setBrightness(brightness, KNOB_ANIMATION_TIME);
       }
 
       break;
@@ -85,7 +85,7 @@ void MultiKnob::callback(uint16_t value, void *callbackData) {
       if (isReadingInUse) {
         uint8_t brightness =
             map(value, MIN_VALUE, MAX_VALUE, MIN_VALUE, MAX_BRIGHTNESS);
-        ambientLight.setBrightness(brightness);
+        ambientLight.setBrightness(brightness, KNOB_ANIMATION_TIME);
       } else {
         // TODO: Call Shelly API
       }

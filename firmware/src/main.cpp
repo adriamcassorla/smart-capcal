@@ -27,7 +27,7 @@ void setup() {
 void loop() {
   EVERY_N_MILLISECONDS(POLL_INTERVAL) {
     switchesLoop();
-    knobsLoop();
+    // knobsLoop();
   }
 
   EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) {

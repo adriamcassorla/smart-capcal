@@ -12,7 +12,6 @@
 #define NUM_KNOBS 2
 
 #define KNOB_RESOLUTION 8
-#define KNOB_ANIMATION_TIME 50
 
 #define MIN_VALUE 0
 #define MAX_VALUE 1023

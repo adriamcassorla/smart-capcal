@@ -30,7 +30,7 @@ void ReadingLight::toggle() {
 }
 
 void ReadingLight::refresh() {
-  applyNewBrightness();
+  if (isOn) processBrightnessChange();
 }
 
 void ReadingLight::reset() {
@@ -67,7 +67,7 @@ void ReadingLight::loop() {
   // If it has overpassed the target duration, overwrites brightness
   if (elapsedDuration > targetDuration) {
     brightness = targetBrightness;
-    applyNewBrightness();
+    processBrightnessChange();
     return;
   }
 
@@ -77,10 +77,10 @@ void ReadingLight::loop() {
   float step = brightnessDif / remainingSteps;
 
   brightness += round(step);
-  applyNewBrightness();
+  processBrightnessChange();
 }
 
-void ReadingLight::applyNewBrightness() {
+void ReadingLight::processBrightnessChange() {
   CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
   fill_solid(readingLeds, numLeds, color);
 }
@@ -92,20 +92,23 @@ AmbientLight::AmbientLight(LightSection *sections, uint16_t length)
     : lightSections(sections),
       numSections(length),
       isOn(false),
-      brightness(MAX_BRIGHTNESS),
-      lastBrightness(MAX_BRIGHTNESS) {}
+      brightness(DEFAULT_BRIGHTNESS),
+      targetBrightness(DEFAULT_BRIGHTNESS),
+      lastBrightness(DEFAULT_BRIGHTNESS) {}
 
 void AmbientLight::toggle() {
   // Stores the last value when switching off
   if (isOn) lastBrightness = brightness;
   isOn = !isOn;
 
-  brightness = isOn ? lastBrightness : 0;
-  applyNewBrightness();
+  uint8_t newBrightness = isOn ? lastBrightness : 0;
+
+  if (isOn) brightness = MIN_BRIGHTNESS;
+  setBrightness(newBrightness, AMBIENT_ANIMATION_TIME);
 }
 
 void AmbientLight::refresh() {
-  applyNewBrightness();
+  if (isOn) processBrightnessChange();
 }
 
 void AmbientLight::reset() {
@@ -117,19 +120,52 @@ bool AmbientLight::getIsOn() {
   return isOn;
 }
 
-void AmbientLight::setBrightness(uint8_t value) {
+bool AmbientLight::getIsAnimating() {
+  return isAnimating;
+}
+
+void AmbientLight::setBrightness(uint8_t value, int duration) {
   // Prevents big jumps from off to on state
   // when using multiple switches and knobs
+  bool isSetFromKnob = duration == KNOB_ANIMATION_TIME;
   if (value != brightness &&
-      (isOn || abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE)) {
-    brightness = value;
-    isOn = brightness > MIN_BRIGHTNESS;
+      (isOn || !isSetFromKnob ||
+       abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE)) {
+    targetBrightness = value;
+    targetDuration = duration;
+    elapsedDuration = 0;
 
-    applyNewBrightness();
+    isAnimating = true;
+    isOn = value > MIN_BRIGHTNESS;
   }
 }
 
-void AmbientLight::applyNewBrightness() {
+void AmbientLight::loop() {
+  if (!isAnimating) return; // No need to contiue if it's not animating
+
+  // If it has already arived to the target, stop animation
+  if (targetBrightness == brightness) {
+    isAnimating = false;
+    return;
+  }
+
+  // If it has overpassed the target duration, overwrites brightness
+  if (elapsedDuration > targetDuration) {
+    brightness = targetBrightness;
+    processBrightnessChange();
+    return;
+  }
+
+  float remainingSteps =
+      (targetDuration - elapsedDuration) / ANIMATION_INTERVAL;
+  float brightnessDif = targetBrightness - brightness;
+  float step = brightnessDif / remainingSteps;
+
+  brightness += round(step);
+  processBrightnessChange();
+}
+
+void AmbientLight::processBrightnessChange() {
   FastLED.clear();
 
   for (uint8_t n = 0; n < numSections; n++) {
@@ -185,8 +221,6 @@ void AmbientLight::applyNewBrightness() {
       fill_solid(lightSections[n].ledsArray + pOffset, sectionLength, color);
     }
   }
-
-  FastLED.show();
 }
 
 /////
@@ -398,9 +432,15 @@ void lightsLoop() {
   demoLights.loop();
   readingLeft.loop();
   readingRight.loop();
+  ambientLight.loop();
 
   if (demoLights.getIsOn() || readingLeft.getIsAnimating() ||
-      readingRight.getIsAnimating()) {
+      readingRight.getIsAnimating() || ambientLight.getIsAnimating()) {
+    // Priorises reading light to keep on over others
+    readingLeft.refresh();
+    readingRight.refresh();
+
+    // Sends changes to led strips
     FastLED.show();
   }
 };

@@ -42,6 +42,8 @@
 #define FRAMES_PER_SECOND 60
 #define ANIMATION_INTERVAL 16 // SECOND / FRAMES_PER_SECOND
 #define READING_ANIMATION_TIME 200
+#define AMBIENT_ANIMATION_TIME 500
+#define KNOB_ANIMATION_TIME 50
 
 extern CRGB topLeds[NUM_LEDS_TOP];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
@@ -98,7 +100,7 @@ private:
   long unsigned int targetDuration;
   bool isReversed;
 
-  void applyNewBrightness();
+  void processBrightnessChange();
 };
 
 class AmbientLight {
@@ -107,17 +109,28 @@ public:
   void toggle();
   void refresh();
   void reset();
+
   bool getIsOn();
-  void setBrightness(uint8_t value);
+  bool getIsAnimating();
+  void setBrightness(uint8_t value, int duration);
+
+  void loop();
 
 private:
   struct LightSection *lightSections;
   uint8_t numSections;
+
   bool isOn;
+  bool isAnimating;
+
   uint8_t brightness;
+  uint8_t targetBrightness;
   uint8_t lastBrightness;
 
-  void applyNewBrightness();
+  elapsedMillis elapsedDuration;
+  long unsigned int targetDuration;
+
+  void processBrightnessChange();
 };
 
 class DemoLights {
