@@ -374,14 +374,14 @@ AmbientLight ambientLight(lightSections, NUM_SECTIONS);
 DemoLights demoLights(lightSections, NUM_SECTIONS);
 
 void lightsSetup() {
-  FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(
-      ambientLeds, NUM_LEDS_AMBIENT
+  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(
+      topLeds, NUM_LEDS_TOP
   );
   FastLED.addLeds<CHPSET, DATA_PIN_READING, CLOCK_PIN_READING, COLOR_ORDER>(
       readingLeds, NUM_LEDS_READING * 2
   );
-  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(
-      topLeds, NUM_LEDS_TOP
+  FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(
+      ambientLeds, NUM_LEDS_AMBIENT
   );
 
   FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
