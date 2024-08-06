@@ -45,6 +45,8 @@
 #define AMBIENT_ANIMATION_TIME 500
 #define KNOB_ANIMATION_TIME 50
 
+#define LIGHTS_WATCHDOG_INTERVAL 10 // minutes
+
 extern CRGB topLeds[NUM_LEDS_TOP];
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
 extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
@@ -171,5 +173,6 @@ private:
 
 void lightsSetup();
 void lightsLoop();
+void lightsWatchdog();
 
 #endif // LIGHTS_H
