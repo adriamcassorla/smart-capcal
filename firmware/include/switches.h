@@ -16,6 +16,8 @@
 
 #define SWITCHES_GROUND_PIN 18
 
+#define INITAL_SAFETY_POLLS 3
+
 extern uint8_t leftPins[NUM_SWITCHES];
 extern uint8_t rightPins[NUM_SWITCHES];
 extern class MultiSwitch leftSwitches;

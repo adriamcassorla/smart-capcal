@@ -9,12 +9,12 @@ MultiSwitch::MultiSwitch(
     uint8_t *pinNumbers, ReadingLight *light, DemoLights::Mode mode
 )
     : readingLight(light), demoMode(mode) {
-  for (uint8_t i = 0; i < NUM_SWITCHES; ++i) {
+  for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
     toggleSwitches[i] = new Switch(pinNumbers[i]);
-  }
 }
 
 int MultiSwitch::pinIds[NUM_SWITCHES] = {0, 1, 2};
+
 void MultiSwitch::setup() {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i) {
     MultiSwitchCallbackData *callbackData =
@@ -25,9 +25,8 @@ void MultiSwitch::setup() {
 }
 
 void MultiSwitch::poll() {
-  for (uint8_t i = 0; i < NUM_SWITCHES; ++i) {
+  for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
     toggleSwitches[i]->poll();
-  }
 }
 
 void MultiSwitch::callback(void *callbackData) {
@@ -40,7 +39,7 @@ void MultiSwitch::callback(void *callbackData) {
   int pinId = data->pinId;
 
   // Check if multiSwitch is valid before using it
-  if (!multiSwitch) { return; }
+  if (!multiSwitch) return;
 
   // Stop demo if isOn and another switch has been selected
   if (demoLights.getIsOn() && pinId != 2) {
@@ -54,18 +53,13 @@ void MultiSwitch::callback(void *callbackData) {
   }
 
   switch (pinId) {
-  case 0:
-    multiSwitch->readingLight->toggle();
-    break;
-  case 1:
-    ambientLight.toggle();
-    break;
-  case 2:
-    demoLights.setMode(multiSwitch->demoMode);
-    demoLights.toggle();
-    break;
-  default:
-    break;
+    case 0: multiSwitch->readingLight->toggle(); break;
+    case 1: ambientLight.toggle(); break;
+    case 2:
+      demoLights.setMode(multiSwitch->demoMode);
+      demoLights.toggle();
+      break;
+    default: break;
   }
 }
 
@@ -90,7 +84,16 @@ void switchesSetup() {
 ////////
 // LOOP
 ////////
+
+uint8_t initialPolls = 0;
+
 void switchesLoop() {
   leftSwitches.poll();
   rightSwitches.poll();
+
+  // This prevents unwanted toggles on init
+  if (initialPolls < INITAL_SAFETY_POLLS) {
+    lightsReset();
+    initialPolls++;
+  };
 }

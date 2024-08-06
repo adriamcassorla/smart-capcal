@@ -113,7 +113,7 @@ void AmbientLight::refresh() {
 
 void AmbientLight::reset() {
   isOn = false;
-  brightness = MAX_BRIGHTNESS;
+  setBrightness(0, AMBIENT_ANIMATION_TIME);
 }
 
 bool AmbientLight::getIsOn() {
@@ -406,26 +406,6 @@ LightSection lightSections[NUM_SECTIONS] = {
 AmbientLight ambientLight(lightSections, NUM_SECTIONS);
 DemoLights demoLights(lightSections, NUM_SECTIONS);
 
-//////////
-// WATCHDOG
-//////////
-
-// Returns early if any light is currently on.
-// Otherwise, clears the strips
-void lightsWatchdog() {
-  if (readingLeft.getIsOn() || readingRight.getIsOn() || demoLights.getIsOn() ||
-      ambientLight.getIsOn()) {
-    return;
-  } else {
-    FastLED.clear();
-    FastLED.show();
-  }
-};
-
-//////////
-// SETUP
-//////////
-
 void lightsSetup() {
   FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(
       topLeds, NUM_LEDS_TOP
@@ -460,6 +440,33 @@ void lightsLoop() {
     readingRight.refresh();
 
     // Sends changes to led strips
+    FastLED.show();
+  }
+};
+
+void lightsReset() {
+  readingLeft.reset();
+  readingRight.reset();
+  ambientLight.reset();
+  demoLights.stop();
+
+  FastLED.clear();
+  FastLED.show();
+}
+
+//////////
+// WATCHDOG
+
+//////////
+
+// Returns early if any light is currently on.
+// Otherwise, clears the strips
+void lightsWatchdog() {
+  if (readingLeft.getIsOn() || readingRight.getIsOn() || demoLights.getIsOn() ||
+      ambientLight.getIsOn()) {
+    return;
+  } else {
+    FastLED.clear();
     FastLED.show();
   }
 };

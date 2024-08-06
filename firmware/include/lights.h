@@ -173,6 +173,7 @@ private:
 
 void lightsSetup();
 void lightsLoop();
+void lightsReset();
 void lightsWatchdog();
 
 #endif // LIGHTS_H
