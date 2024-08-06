@@ -34,5 +34,11 @@ void loop() {
     knobsLoop();
   }
 
-  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) { lightsLoop(); }
+  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) {
+    lightsLoop();
+  }
+
+  EVERY_N_MINUTES(LIGHTS_WATCHDOG_INTERVAL) {
+    lightsWatchdog();
+  }
 }
