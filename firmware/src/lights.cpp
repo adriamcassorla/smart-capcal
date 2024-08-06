@@ -330,10 +330,9 @@ ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
 
 // Section configurations for ambient and demo modes
 SectionConfig ambientConfig = {
-  firstLedOffset : 30 // Starts with full floor lights on
+  lowerBound : 100,
 };
 SectionConfig topConfig = {
-  lowerBound : 100,
   firstLedOffset : 10, // Starts from the center but not from a point
 };
 SectionConfig dioramaConfig = {
