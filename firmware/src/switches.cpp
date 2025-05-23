@@ -47,8 +47,8 @@ void MultiSwitch::callback(void *callbackData) {
 
   switch (pinId) {
     case 0: multiSwitch->readingLight->toggle(); break;
-    case 1: break;
-    case 2: break;
+    case 1: topLight.toggle(); break;
+    case 2: ambientLight.toggle(); break;
     default: break;
   }
 }

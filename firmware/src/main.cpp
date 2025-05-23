@@ -17,6 +17,8 @@ void setup() {
   // Internal parts setup
   lightsSetup();
   switchesSetup();
+
+  Serial.begin(9600);
 }
 
 //////////

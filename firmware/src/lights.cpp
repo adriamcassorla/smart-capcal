@@ -10,28 +10,27 @@
 // Reading Light Implementation
 /////
 Light::Light(struct CRGB *array, uint8_t length)
-    : Leds(array), numLeds(length), isOn(false), brightness(0) {}
+    : Leds(array), numLeds(length), isOn(false) {}
 
 void Light::toggle() {
   // Stores the last value when switching off
   isOn = !isOn;
-  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
-  processBrightnessChange();
+  Serial.println(isOn ? "on" : "off");
+
+  CRGB::HTMLColorCode color = isOn ? CRGB::Goldenrod : CRGB::Black;
+  for (uint16_t i = 0; i < numLeds; ++i)
+    Leds[i] = color;
+  FastLED.show();
 }
 
 void Light::reset() {
   isOn = false;
-  brightness = 0;
-  processBrightnessChange();
+  fill_solid(Leds, numLeds, CRGB::Black);
+  FastLED.show();
 }
 
 bool Light::getIsOn() {
   return isOn;
-}
-
-void Light::processBrightnessChange() {
-  fill_solid(Leds, numLeds, CRGB::DarkSalmon);
-  FastLED.show();
 }
 
 /////////
@@ -40,11 +39,13 @@ void Light::processBrightnessChange() {
 
 CRGB readingLeds[NUM_LEDS_READING * 2];
 CRGB topLeds[NUM_LEDS_TOP];
+CRGB ambientLeds[NUM_LEDS_AMBIENT];
 
 // These instances are only used for spot lights
 Light readingLeft(readingLeds + NUM_LEDS_READING, NUM_LEDS_READING);
 Light readingRight(readingLeds, NUM_LEDS_READING);
-Light topLight(readingLeds, NUM_LEDS_TOP);
+Light topLight(topLeds, NUM_LEDS_TOP);
+Light ambientLight(ambientLeds, NUM_LEDS_AMBIENT);
 
 void lightsSetup() {
   FastLED.addLeds<CHPSET, DATA_PIN_READING, CLOCK_PIN_READING, COLOR_ORDER>(
@@ -53,6 +54,9 @@ void lightsSetup() {
   FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(
       topLeds, NUM_LEDS_TOP
   );
+  FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(
+      ambientLeds, NUM_LEDS_AMBIENT
+  );
 
   FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
   FastLED.setBrightness(MAX_BRIGHTNESS);
@@ -60,14 +64,11 @@ void lightsSetup() {
   FastLED.show();
 };
 
-//////////
-// LOOP
-//////////
-
 void lightsReset() {
   readingLeft.reset();
   readingRight.reset();
   topLight.reset();
+  ambientLight.reset();
 
   FastLED.clear();
   FastLED.show();

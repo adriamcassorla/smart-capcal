@@ -10,22 +10,16 @@
 #define MAX_AMPS 30000
 
 #define MAX_BRIGHTNESS 255
-#define MIN_BRIGHTNESS 20
-#define DEFAULT_BRIGHTNESS 218
-#define WARM_WHITE_HUE 30
-#define WARM_WHITE_SAT 200
-#define READING_MIN_VALUE 80
+#define DEFAULT_BRIGHTNESS 200
 
 #define NUM_LEDS_AMBIENT 192 // 120 are AMBIENT and 72 are DIORAMA
 #define NUM_LEDS_READING 144
 #define NUM_LEDS_TOP 107
 
-#define NUM_SECTIONS 7
 #define NUM_LEDS_SIDE_AMBIENT 60
 #define NUM_LEDS_DIORAMA 73 // Initialised as part of AMBIENT
 #define DIORAMA_FIRST_LED NUM_LEDS_SIDE_AMBIENT
 #define LEFT_AMBIENT_FIRST_LED NUM_LEDS_SIDE_AMBIENT + NUM_LEDS_DIORAMA
-#define NUM_LEDS_HALF_TOP 54
 
 #define DATA_PIN_TOP 6
 #define CLOCK_PIN_TOP 7
@@ -42,9 +36,13 @@
 #define LIGHTS_WATCHDOG_INTERVAL 10 // minutes
 
 extern CRGB readingLeds[NUM_LEDS_READING * 2];
+extern CRGB topLeds[NUM_LEDS_TOP];
+extern CRGB ambientLeds[NUM_LEDS_AMBIENT];
 
 extern class Light readingLeft;
 extern class Light readingRight;
+extern class Light topLight;
+extern class Light ambientLight;
 
 class Light {
 public:
@@ -57,9 +55,6 @@ private:
   struct CRGB *Leds;
   uint8_t numLeds;
   bool isOn;
-  uint8_t brightness;
-
-  void processBrightnessChange();
 };
 
 void lightsSetup();
