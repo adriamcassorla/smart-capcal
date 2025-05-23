@@ -2,7 +2,6 @@
 #include <Arduino.h>
 #include <FastLED.h>
 
-#include "knobs.h"
 #include "lights.h"
 #include "switches.h"
 
@@ -18,7 +17,6 @@ void setup() {
   // Internal parts setup
   lightsSetup();
   switchesSetup();
-  knobsSetup();
 }
 
 //////////
@@ -27,11 +25,6 @@ void setup() {
 void loop() {
   EVERY_N_MILLISECONDS(POLL_INTERVAL) {
     switchesLoop();
-    // knobsLoop();
-  }
-
-  EVERY_N_MILLISECONDS(ANIMATION_INTERVAL) {
-    lightsLoop();
   }
 
   EVERY_N_MINUTES(LIGHTS_WATCHDOG_INTERVAL) {

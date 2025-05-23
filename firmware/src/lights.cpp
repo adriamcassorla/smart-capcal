@@ -9,412 +9,49 @@
 /////
 // Reading Light Implementation
 /////
-ReadingLight::ReadingLight(struct CRGB *array, uint8_t length, bool reverse)
-    : readingLeds(array),
-      numLeds(length),
-      isOn(false),
-      brightness(DEFAULT_BRIGHTNESS),
-      targetBrightness(DEFAULT_BRIGHTNESS),
-      lastBrightness(DEFAULT_BRIGHTNESS),
-      isReversed(reverse) {}
+Light::Light(struct CRGB *array, uint8_t length)
+    : Leds(array), numLeds(length), isOn(false), brightness(0) {}
 
-void ReadingLight::toggle() {
+void Light::toggle() {
   // Stores the last value when switching off
-  if (isOn) lastBrightness = brightness;
-
   isOn = !isOn;
-  uint8_t newBrightness = isOn ? lastBrightness : 0;
-
-  if (isOn) brightness = MIN_BRIGHTNESS;
-  setBrightness(newBrightness, READING_ANIMATION_TIME);
-}
-
-void ReadingLight::refresh() {
-  if (isOn) processBrightnessChange();
-}
-
-void ReadingLight::reset() {
-  isOn = false;
-  brightness = DEFAULT_BRIGHTNESS;
-}
-
-bool ReadingLight::getIsOn() {
-  return isOn;
-}
-
-bool ReadingLight::getIsAnimating() {
-  return isAnimating;
-}
-
-void ReadingLight::setBrightness(uint8_t value, int duration) {
-  if (value != brightness) {
-    targetBrightness = value;
-    targetDuration = duration;
-    elapsedDuration = 0;
-    isAnimating = true;
-  }
-}
-
-void ReadingLight::loop() {
-  if (!isAnimating) return; // No need to contiue if it's not animating
-
-  // If it has already arived to the target, stop animation
-  if (targetBrightness == brightness) {
-    isAnimating = false;
-    return;
-  }
-
-  // If it has overpassed the target duration, overwrites brightness
-  if (elapsedDuration > targetDuration) {
-    brightness = targetBrightness;
-    processBrightnessChange();
-    return;
-  }
-
-  float remainingSteps =
-      (targetDuration - elapsedDuration) / ANIMATION_INTERVAL;
-  float brightnessDif = targetBrightness - brightness;
-  float step = brightnessDif / remainingSteps;
-
-  brightness += round(step);
+  brightness = isOn ? DEFAULT_BRIGHTNESS : 0;
   processBrightnessChange();
 }
 
-void ReadingLight::processBrightnessChange() {
-  CHSV color = CHSV(WARM_WHITE_HUE, WARM_WHITE_SAT, brightness);
-  fill_solid(readingLeds, numLeds, color);
-}
-
-/////
-// Ambient Light Implementation
-/////
-AmbientLight::AmbientLight(LightSection *sections, uint16_t length)
-    : lightSections(sections),
-      numSections(length),
-      isOn(false),
-      brightness(DEFAULT_BRIGHTNESS),
-      targetBrightness(DEFAULT_BRIGHTNESS),
-      lastBrightness(DEFAULT_BRIGHTNESS) {}
-
-void AmbientLight::toggle() {
-  // Stores the last value when switching off
-  if (isOn) lastBrightness = brightness;
-  isOn = !isOn;
-
-  uint8_t newBrightness = isOn ? lastBrightness : 0;
-
-  if (isOn) brightness = MIN_BRIGHTNESS;
-  setBrightness(newBrightness, AMBIENT_ANIMATION_TIME);
-}
-
-void AmbientLight::refresh() {
-  if (isOn) processBrightnessChange();
-}
-
-void AmbientLight::reset() {
+void Light::reset() {
   isOn = false;
-  setBrightness(0, AMBIENT_ANIMATION_TIME);
-}
-
-bool AmbientLight::getIsOn() {
-  return isOn;
-}
-
-bool AmbientLight::getIsAnimating() {
-  return isAnimating;
-}
-
-void AmbientLight::setBrightness(uint8_t value, int duration) {
-  // Prevents big jumps from off to on state
-  // when using multiple switches and knobs
-  bool isSetFromKnob = duration == KNOB_ANIMATION_TIME;
-  if (value != brightness &&
-      (isOn || !isSetFromKnob ||
-       abs(value - brightness) < MAX_BRIGHTNESS_DIFFERENCE)) {
-    targetBrightness = value;
-    targetDuration = duration;
-    elapsedDuration = 0;
-
-    isAnimating = true;
-    isOn = value > MIN_BRIGHTNESS;
-  }
-}
-
-void AmbientLight::loop() {
-  if (!isAnimating) return; // No need to contiue if it's not animating
-
-  // If it has already arived to the target, stop animation
-  if (targetBrightness == brightness) {
-    isAnimating = false;
-    return;
-  }
-
-  // If it has overpassed the target duration, overwrites brightness
-  if (elapsedDuration > targetDuration) {
-    brightness = targetBrightness;
-    processBrightnessChange();
-    return;
-  }
-
-  float remainingSteps =
-      (targetDuration - elapsedDuration) / ANIMATION_INTERVAL;
-  float brightnessDif = targetBrightness - brightness;
-  float step = brightnessDif / remainingSteps;
-
-  brightness += round(step);
+  brightness = 0;
   processBrightnessChange();
 }
 
-void AmbientLight::processBrightnessChange() {
-  FastLED.clear();
-
-  for (uint8_t n = 0; n < numSections; n++) {
-    if (brightness >= lightSections[n].config->lowerBound) {
-      // When brightness is lower than the upperBound, maps the section
-      // brightness betweeen min and max values set in the config
-      uint8_t sectionBrightness =
-          brightness >= lightSections[n].config->upperBound
-              ? lightSections[n].config->maxBrightness
-              : map(brightness,
-                    lightSections[n].config->lowerBound,
-                    lightSections[n].config->upperBound,
-                    lightSections[n].config->minBrightness,
-                    lightSections[n].config->maxBrightness);
-
-      // Max length of the section is given by the total length minus the
-      // offset
-      uint8_t maxLength =
-          lightSections[n].length - lightSections[n].config->lastLedOffset;
-      // When brightness is lower than the upperBound, maps the section
-      // length betweeen first led offset and max length
-      bool skipLengthMapping = lightSections[n].config->firstLedOffset == 0 &&
-                               lightSections[n].config->lastLedOffset == 0;
-      uint8_t sectionLength =
-          skipLengthMapping || brightness >= lightSections[n].config->upperBound
-              ? maxLength
-              : map(brightness,
-                    lightSections[n].config->lowerBound,
-                    lightSections[n].config->upperBound,
-                    lightSections[n].config->firstLedOffset,
-                    maxLength);
-
-      // Compensates saturation for low brightness (otherwise tends to red)
-      int sCompensation = sectionBrightness < MAX_BRIGHTNESS
-                            ? map(sectionBrightness,
-                                  MIN_BRIGHTNESS,
-                                  DEFAULT_BRIGHTNESS,
-                                  WARM_WHITE_SAT_COMPENSATION,
-                                  0)
-                            : 0;
-
-      // Creates a HSV color with the resulting brightness
-      CHSV color = CHSV(
-          WARM_WHITE_HUE + lightSections[n].config->hueOffset,
-          WARM_WHITE_SAT + lightSections[n].config->satOffset - sCompensation,
-          sectionBrightness
-      );
-
-      // When the section is mirrorred, adds an offset to the array pointer
-      uint16_t pOffset =
-          lightSections[n].mirror ? lightSections[n].length - sectionLength : 0;
-
-      fill_solid(lightSections[n].ledsArray + pOffset, sectionLength, color);
-    }
-  }
-}
-
-/////
-// Demo Lights Implementation
-/////
-DemoLights::DemoLights(LightSection *sections, uint16_t length)
-    : lightSections(sections),
-      numSections(length),
-      brightness(DEFAULT_BRIGHTNESS),
-      activeMode(Mode::Rainbow),
-      isOn(false) {}
-
-void DemoLights::toggle() {
-  isOn = !isOn;
-  FastLED.clear();
-  FastLED.show();
-}
-
-void DemoLights::stop() {
-  isOn = false;
-  FastLED.clear();
-  FastLED.show();
-}
-
-bool DemoLights::getIsOn() {
+bool Light::getIsOn() {
   return isOn;
 }
 
-void DemoLights::setBrightness(uint8_t value) {
-  brightness = value;
-}
-
-void DemoLights::setMode(Mode mode) {
-  activeMode = mode;
-}
-
-void DemoLights::loop() {
-  if (isOn) {
-    switch (activeMode) {
-      case Mode::Rainbow: rainbow_beat(); break;
-
-      case Mode::Chromotherapy: chromoteraphy_beat(); break;
-
-      default: break;
-    }
-  }
-}
-
-void DemoLights::applyRandomPalette(
-    struct CRGB *targetArray,
-    CRGBPalette16 &pal,
-    uint16_t numLeds,
-    uint8_t indexScale,
-    uint8_t minBrightness,
-    uint8_t maxBrightness
-) {
-  for (u_int16_t i = 0; i < numLeds; i++) {
-    uint8_t b = inoise8(i, millis() / 30);
-    uint16_t index = inoise16(i * indexScale, millis() / 20);
-
-    targetArray[i] = ColorFromPalette(
-        pal,
-        constrain(index, 0, numLeds - 1),
-        constrain(b, minBrightness, maxBrightness)
-    );
-  }
-}
-
-void DemoLights::rainbow_beat() {
-  uint8_t beatA = beatsin8(9, 0, brightness);
-  uint8_t beatB = beatsin8(13, 0, brightness);
-  for (uint8_t n = 0; n < numSections; n++) {
-    fill_rainbow(
-        lightSections[n].ledsArray,
-        lightSections[n].length,
-        (beatA + beatB) / 2,
-        lightSections[n].config->maxBrightness / lightSections[n].length
-    );
-  }
-}
-
-void DemoLights::chromoteraphy_beat() {
-  for (uint8_t n = 0; n < numSections; n++) {
-    applyRandomPalette(
-        lightSections[n].ledsArray,
-        topPalette,
-        lightSections[n].length,
-        100,
-        brightness * 0.2,
-        std::min(lightSections[n].config->maxBrightness, brightness)
-    );
-  }
+void Light::processBrightnessChange() {
+  fill_solid(Leds, numLeds, CRGB::DarkSalmon);
+  FastLED.show();
 }
 
 /////////
 // SETUP
 /////////
 
-CRGB ambientLeds[NUM_LEDS_AMBIENT];
 CRGB readingLeds[NUM_LEDS_READING * 2];
 CRGB topLeds[NUM_LEDS_TOP];
 
 // These instances are only used for spot lights
-ReadingLight
-    readingLeft(readingLeds + NUM_LEDS_READING, NUM_LEDS_READING, true);
-ReadingLight readingRight(readingLeds, NUM_LEDS_READING, false);
-
-// Section configurations for ambient and demo modes
-SectionConfig ambientConfig = {
-  lowerBound : 100,
-};
-SectionConfig topConfig = {
-  firstLedOffset : 10, // Starts from the center but not from a point
-};
-SectionConfig dioramaConfig = {
-  lowerBound : 180,
-  maxBrightness : 70,
-  satOffset : 10,
-};
-SectionConfig readingConfig = {
-  lowerBound : 200,
-  maxBrightness : 190,
-  lastLedOffset : 80,
-};
-
-// Sections initialisation
-LightSection ambientLeft = {
-    .ledsArray = ambientLeds + LEFT_AMBIENT_FIRST_LED,
-    .length = NUM_LEDS_SIDE_AMBIENT - 1, // Bad soldering -> one led missing
-    .config = &ambientConfig,
-    .mirror = true
-};
-
-LightSection ambientRight = {
-    .ledsArray = ambientLeds,
-    .length = NUM_LEDS_SIDE_AMBIENT,
-    .config = &ambientConfig
-};
-
-LightSection topLeft = {
-    .ledsArray = topLeds + NUM_LEDS_HALF_TOP,
-    .length = NUM_LEDS_HALF_TOP,
-    .config = &topConfig,
-};
-
-LightSection topRight = {
-    .ledsArray = topLeds,
-    .length = NUM_LEDS_HALF_TOP,
-    .config = &topConfig,
-    .mirror = true
-};
-
-LightSection diorama = {
-    .ledsArray = ambientLeds + DIORAMA_FIRST_LED,
-    .length = NUM_LEDS_DIORAMA,
-    .config = &dioramaConfig
-};
-
-LightSection readingSectionLeft = {
-    .ledsArray = readingLeds + NUM_LEDS_READING,
-    .length = NUM_LEDS_READING,
-    .config = &readingConfig,
-    .mirror = true
-};
-
-LightSection readingSectionRight = {
-    .ledsArray = readingLeds,
-    .length = NUM_LEDS_READING,
-    .config = &readingConfig
-};
-
-// Assignation to the main sections array
-LightSection lightSections[NUM_SECTIONS] = {
-    ambientLeft,
-    ambientRight,
-    topLeft,
-    topRight,
-    diorama,
-    readingSectionLeft,
-    readingSectionRight
-};
-
-AmbientLight ambientLight(lightSections, NUM_SECTIONS);
-DemoLights demoLights(lightSections, NUM_SECTIONS);
+Light readingLeft(readingLeds + NUM_LEDS_READING, NUM_LEDS_READING);
+Light readingRight(readingLeds, NUM_LEDS_READING);
+Light topLight(readingLeds, NUM_LEDS_TOP);
 
 void lightsSetup() {
-  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(
-      topLeds, NUM_LEDS_TOP
-  );
   FastLED.addLeds<CHPSET, DATA_PIN_READING, CLOCK_PIN_READING, COLOR_ORDER>(
       readingLeds, NUM_LEDS_READING * 2
   );
-  FastLED.addLeds<CHPSET, DATA_PIN_AMBIENT, CLOCK_PIN_AMBIENT, COLOR_ORDER>(
-      ambientLeds, NUM_LEDS_AMBIENT
+  FastLED.addLeds<CHPSET, DATA_PIN_TOP, CLOCK_PIN_TOP, COLOR_ORDER>(
+      topLeds, NUM_LEDS_TOP
   );
 
   FastLED.setMaxPowerInVoltsAndMilliamps(VOLTS, MAX_AMPS);
@@ -427,28 +64,10 @@ void lightsSetup() {
 // LOOP
 //////////
 
-void lightsLoop() {
-  demoLights.loop();
-  readingLeft.loop();
-  readingRight.loop();
-  ambientLight.loop();
-
-  if (demoLights.getIsOn() || readingLeft.getIsAnimating() ||
-      readingRight.getIsAnimating() || ambientLight.getIsAnimating()) {
-    // Priorises reading light to keep on over others
-    readingLeft.refresh();
-    readingRight.refresh();
-
-    // Sends changes to led strips
-    FastLED.show();
-  }
-};
-
 void lightsReset() {
   readingLeft.reset();
   readingRight.reset();
-  ambientLight.reset();
-  demoLights.stop();
+  topLight.reset();
 
   FastLED.clear();
   FastLED.show();
@@ -462,8 +81,7 @@ void lightsReset() {
 // Returns early if any light is currently on.
 // Otherwise, clears the strips
 void lightsWatchdog() {
-  if (readingLeft.getIsOn() || readingRight.getIsOn() || demoLights.getIsOn() ||
-      ambientLight.getIsOn()) {
+  if (readingLeft.getIsOn() || readingRight.getIsOn() | topLight.getIsOn()) {
     return;
   } else {
     FastLED.clear();

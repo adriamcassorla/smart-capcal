@@ -5,10 +5,8 @@
 /////
 // MultiSwitch Implementation
 /////
-MultiSwitch::MultiSwitch(
-    uint8_t *pinNumbers, ReadingLight *light, DemoLights::Mode mode
-)
-    : readingLight(light), demoMode(mode) {
+MultiSwitch::MultiSwitch(uint8_t *pinNumbers, Light *light)
+    : readingLight(light) {
   for (uint8_t i = 0; i < NUM_SWITCHES; ++i)
     toggleSwitches[i] = new Switch(pinNumbers[i]);
 }
@@ -41,24 +39,16 @@ void MultiSwitch::callback(void *callbackData) {
   // Check if multiSwitch is valid before using it
   if (!multiSwitch) return;
 
-  // Stop demo if isOn and another switch has been selected
-  if (demoLights.getIsOn() && pinId != 2) {
-    demoLights.stop();
-  }
   // Reset other lights when demo mode is selected
   else if (pinId == 2) {
-    ambientLight.reset();
     readingRight.reset();
     readingLeft.reset();
   }
 
   switch (pinId) {
     case 0: multiSwitch->readingLight->toggle(); break;
-    case 1: ambientLight.toggle(); break;
-    case 2:
-      demoLights.setMode(multiSwitch->demoMode);
-      demoLights.toggle();
-      break;
+    case 1: break;
+    case 2: break;
     default: break;
   }
 }
@@ -69,9 +59,8 @@ void MultiSwitch::callback(void *callbackData) {
 
 uint8_t leftPins[] = {SWITCH_1, SWITCH_2, SWITCH_3};
 uint8_t rightPins[] = {SWITCH_4, SWITCH_5, SWITCH_6};
-MultiSwitch leftSwitches(leftPins, &readingLeft, DemoLights::Mode::Rainbow);
-MultiSwitch
-    rightSwitches(rightPins, &readingRight, DemoLights::Mode::Chromotherapy);
+MultiSwitch leftSwitches(leftPins, &readingLeft);
+MultiSwitch rightSwitches(rightPins, &readingRight);
 
 void switchesSetup() {
   pinMode(SWITCHES_GROUND_PIN, OUTPUT);
